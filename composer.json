@@ -1,7 +1,11 @@
 {
   "require": {
     "monolog/monolog": "*",
-    "vlucas/phpdotenv": "*"
+    "vlucas/phpdotenv": "*",
+    "imangazaliev/didom": "^2.0",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pcntl": "*"
   },
   "autoload": {
     "psr-4": {
