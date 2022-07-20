@@ -58,15 +58,16 @@ class Parser
     public static function insertCharactersFromAnchors(array $array): void
     {
         foreach ($array as $anchor) {
-            if (strlen($anchor->getAttribute('href')) === 1)
+            $character = $anchor->getAttribute('href');
+            if (strlen($character) === 1)
                 if (static::checkForDuplicateEntries(
                     'character_table',
                     $anchor->getAttribute('href'),
-                    PDOAdapter::getCharIdFromDB(PDOAdapter::db(), $anchor->getAttribute('href')))
+                    PDOAdapter::getCharIdFromDB(PDOAdapter::db(), $character))
                 ) {
-                    PDOAdapter::insertCharToDB($anchor->getAttribute('href'));
+                    PDOAdapter::insertCharToDB($character);
                 } else {
-                    echo date("Y-m-d H:i:s") . '. Skipped!' . PHP_EOL;
+                    echo date("Y-m-d H:i:s") . ". Character: $character. Skipped!" . PHP_EOL;
                 }
         }
     }
@@ -93,17 +94,18 @@ class Parser
      */
     public static function insertIntervalOfAnswers(PDO $db, string $character, Element $seiteLink): void
     {
+        $interval = $seiteLink->getAttribute('href');
         if (static::checkForDuplicateEntries(
             'interval_id',
             $seiteLink->getAttribute('href'),
-            PDOAdapter::getIntervalIdFromDB($db, $seiteLink->getAttribute('href')))
+            PDOAdapter::getIntervalIdFromDB($db, $interval))
         ) {
             PDOAdapter::insertIntervalToDB($db,
                 intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
-                $seiteLink->getAttribute('href')
+                $interval
             );
         } else {
-            echo date("Y-m-d H:i:s") . '. Skipped!' . PHP_EOL;
+            echo date("Y-m-d H:i:s") . ". Interval: $interval. Skipped!" . PHP_EOL;
         }
     }
 
@@ -128,7 +130,7 @@ class Parser
                 $question
             );
         } else {
-            echo date("Y-m-d H:i:s") . '. Skipped!' . PHP_EOL;
+            echo date("Y-m-d H:i:s") . ". Question: $question. Skipped!" . PHP_EOL;
         }
 
         $answers = $questionPage
@@ -156,21 +158,19 @@ class Parser
 
     public static function insertAnswer($db, $answer, $question, $character): void
     {
-        if (static::checkForDuplicateAnswerEntry(
-            $answer,
-            intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']),
-            PDOAdapter::getAnswerIdFromDB($db,
+        if (PDOAdapter::getAnswerIdFromDB($db,
                 $answer,
-                intval(PDOAdapter::getQuestionIdFromDB($db, $question))))){
-        PDOAdapter::insertAnswerToDB($db,
-            intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']),
-            $answer,
-            strlen($answer),
-            intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id'])
-        );
-    } else {
-        echo date("Y-m-d H:i:s") . '. Skipped!' . PHP_EOL;
-    }
+                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']))) {
+
+            PDOAdapter::insertAnswerToDB($db,
+                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']),
+                $answer,
+                strlen($answer),
+                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id'])
+            );
+        } else {
+            echo date("Y-m-d H:i:s") . ". Answer: $answer . Skipped!" . PHP_EOL;
+        }
     }
 
     public static function checkForDuplicateEntries($tableName, $whereValue, $result): bool
@@ -185,15 +185,8 @@ class Parser
         }
     }
 
-    public static function checkForDuplicateAnswerEntry($whereValue1, $whereValue2, $result)
+    public static function checkForDuplicateAnswerEntry($whereValue1, $whereValue2, $result): bool
     {
-        echo date("Y-m-d H:i:s") . ". Checking for duplicate entry 'answer' with values '$whereValue1' and '$whereValue2' in 'answers' table..." . PHP_EOL;
-        if (isset($result[0])) {
-            echo date("Y-m-d H:i:s") . ". Field 'answer' with values '$whereValue1' and '$whereValue2' is already exist in 'answers' table! Skipping insert..." . PHP_EOL;
-            return false;
-        } else {
-            echo date("Y-m-d H:i:s") . ". Field 'answer' with values '$whereValue1' and '$whereValue2' is not found in 'answers' table! Performing insert.." . PHP_EOL;
-            return true;
-        }
+
     }
 }

@@ -73,9 +73,19 @@ class PDOAdapter
     }
 
     public static function getAnswerIdFromDB($dbConnection, $whereValue1, $whereValue2){
-        $queryGet = $dbConnection->prepare('select answer_id from parser_data.answers where answer = ? and question_id = ?');
-        $queryGet->execute(["$whereValue1", "$whereValue2"]);
-        return $queryGet->fetchAll();
+        echo date("Y-m-d H:i:s") . ". Checking for duplicate entry 'answer' with values '$whereValue1' and question id '$whereValue2' in 'answers' table..." . PHP_EOL;
+        $queryGet = $dbConnection->prepare('select answer_id from parser_data.answers where (answer = ? and question_id = ?)');
+        $queryGet->execute(["$whereValue1", $whereValue2]);
+        $result = $queryGet->fetchAll();
+
+        if (isset($result[0])) {
+            echo date("Y-m-d H:i:s") . ". Field 'answer' with values '$whereValue1' and '$whereValue2' is already exist in 'answers' table! Skipping insert..." . PHP_EOL;
+            return false;
+        } else {
+            echo date("Y-m-d H:i:s") . ". Field 'answer' with values '$whereValue1' and '$whereValue2' is not found in 'answers' table! Performing insert.." . PHP_EOL;
+            return true;
+        }
+
     }
 
     public static function insertIntervalToDB($dbConnection, $char_id, $interval_name): void
