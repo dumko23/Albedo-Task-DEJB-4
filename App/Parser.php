@@ -19,6 +19,7 @@ class Parser
 {
     public static Logger $logInfo;
     public static Logger $logError;
+    public static Logger $debugLogger;
     public static array $logMessages = [
         'onInsert' => 'Adding row to "{table}" table. Value "{field}": "{value}"...',
         'successInsert' => 'Successfully added to "{table}". Value "{field}": "{value}".',
@@ -45,10 +46,12 @@ class Parser
         $output = "%datetime% > %channel%.%level_name% > %message%\n";
         $formatter = new LineFormatter($output, $dateFormat);
 
-        $infoStream = new StreamHandler( __DIR__. '/logs/log_file.log', Level::Info);
+        $infoStream = new StreamHandler(__DIR__ . '/logs/log_file.log', Level::Info);
         $infoStream->setFormatter($formatter);
-        $errorStream = new StreamHandler(__DIR__. '/logs/log_file.log', Level::Error);
+        $errorStream = new StreamHandler(__DIR__ . '/logs/log_file.log', Level::Error);
         $errorStream->setFormatter($formatter);
+        $debugStream = new DebugLogger();
+        $debugStream->setFormatter($formatter);
 
         static::$logInfo = new Logger('parser_info');
         static::$logInfo->pushHandler($infoStream);
@@ -58,7 +61,16 @@ class Parser
         static::$logError->pushHandler($errorStream);
         static::$logError->pushProcessor(new PsrLogMessageProcessor());
 
-        static::$logInfo->info('Initializing Parser...', );
+        static::$debugLogger = new Logger('parser_debug');
+        static::$debugLogger->pushHandler($debugStream);
+        static::$debugLogger->pushProcessor(new PsrLogMessageProcessor());
+
+
+        static::logOrDebug(static::$logInfo,
+            static::$debugLogger,
+            'info',
+            'Initializing Parser...'
+        );
 
 //        Parser::dropNCreate(); // To initialize fresh tables
     }
@@ -68,9 +80,25 @@ class Parser
      */
     public static function dropNCreate(): void
     {
+        PDOAdapter::dropTables(static::$debugLogger, static::$logInfo, static::$logError, static::$logMessages);
+        PDOAdapter::createTables(static::$debugLogger, static::$logInfo, static::$logError, static::$logMessages);
+    }
 
-        PDOAdapter::dropTables(static::$logInfo, static::$logError, static::$logMessages);
-        PDOAdapter::createTables(static::$logInfo, static::$logError, static::$logMessages);
+    /**
+     * @param Logger $logger
+     * @param Logger $debugger
+     * @param string $logType
+     * @param array|string $logMessage
+     * @param array $params
+     * @return void
+     */
+    public static function logOrDebug(Logger $logger, Logger $debugger, string $logType, array|string $logMessage, array $params = []): void
+    {
+        if ($_ENV['DEBUG_MODE'] === "ON") {
+            $debugger->$logType($logMessage, $params);
+        } else if ($_ENV['DEBUG_MODE'] === "OFF"){
+            $logger->$logType($logMessage, $params);
+        }
     }
 
     /**
@@ -79,11 +107,21 @@ class Parser
      */
     public static function createNewDocument(string $href = ''): Document
     {
-        static::$logInfo->info('Creating new document from {url}', ['url' => $_ENV['URL'] . $href]);
+        static::logOrDebug(static::$logInfo,
+            static::$debugLogger,
+            'info',
+            'Creating new document from {url}',
+            ['url' => $_ENV['URL'] . $href]
+        );
         try {
             return new Document($_ENV['URL'] . $href, true);
         } catch (Exception $exception) {
-            static::$logError->error(static::$logMessages['onError'], ['message' => $exception->getMessage(), 'number' => $exception->getLine()]);
+            static::logOrDebug(static::$logError,
+                static::$debugLogger,
+                'error',
+                static::$logMessages['onError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+            );
         }
     }
 
@@ -95,12 +133,21 @@ class Parser
     public static function parseArrayOfElementsFromDocument(Document $doc, string $needle)
     {
         try {
-            static::$logInfo->info('Searching for "{needle}"...', ['needle' => $needle]);
-
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                'Searching for "{needle}"...',
+                ['needle' => $needle]
+            );
             return $doc->find($needle)[0]
                 ->find('a');
         } catch (InvalidSelectorException $exception) {
-            static::$logError->error(static::$logMessages['onError'], ['message' => $exception->getMessage(), 'number' => $exception->getLine()]);
+            static::logOrDebug(static::$logError,
+                static::$debugLogger,
+                'error',
+                static::$logMessages['onError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+            );
         }
     }
 
@@ -119,19 +166,26 @@ class Parser
                         $anchor->getAttribute('href'),
                         PDOAdapter::getCharIdFromDB(
                             PDOAdapter::db(
+                                static::$debugLogger,
                                 static::$logInfo,
                                 static::$logError,
                                 static::$logMessages),
                             $character,
+                            static::$debugLogger,
                             static::$logInfo,
                             static::$logError,
                             static::$logMessages),
                         'letter'
                     )
                 ) {
-                    PDOAdapter::insertCharToDB($character, static::$logInfo, static::$logError, static::$logMessages);
+                    PDOAdapter::insertCharToDB($character, static::$debugLogger,  static::$logInfo, static::$logError, static::$logMessages);
                 } else {
-                    static::$logInfo->info(static::$logMessages['onSkip'], ['field' => 'letter', 'value' => $character]);
+                    static::logOrDebug(static::$logInfo,
+                        static::$debugLogger,
+                        'info',
+                        static::$logMessages['onSkip'],
+                        ['field' => 'letter', 'value' => $character]
+                    );
                 }
             }
         }
@@ -167,6 +221,7 @@ class Parser
                 PDOAdapter::getIntervalIdFromDB(
                     $db,
                     $interval,
+                    static::$debugLogger,
                     static::$logInfo,
                     static::$logError,
                     static::$logMessages),
@@ -178,16 +233,23 @@ class Parser
                     PDOAdapter::getCharIdFromDB(
                         $db,
                         $character,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
                         static::$logMessages)[0]['char_id']),
                 $interval,
+                static::$debugLogger,
                 static::$logInfo,
                 static::$logError,
                 static::$logMessages
             );
         } else {
-            static::$logInfo->info(static::$logMessages['onSkip'], ['field' => 'interval', 'value' => $interval]);
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                static::$logMessages['onSkip'],
+                ['field' => 'interval', 'value' => $interval]
+            );
         }
     }
 
@@ -207,6 +269,7 @@ class Parser
                 $question,
                 PDOAdapter::getQuestionIdFromDB($db,
                     $question,
+                    static::$debugLogger,
                     static::$logInfo,
                     static::$logError,
                     static::$logMessages),
@@ -217,22 +280,30 @@ class Parser
                 intval(
                     PDOAdapter::getCharIdFromDB($db,
                         $character,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
                         static::$logMessages)[0]['char_id']),
                 intval(
                     PDOAdapter::getIntervalIdFromDB($db,
                         $interval,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
                         static::$logMessages)[0]['interval_id']),
                 $question,
+                static::$debugLogger,
                 static::$logInfo,
                 static::$logError,
                 static::$logMessages
             );
         } else {
-            static::$logInfo->info(static::$logMessages['onSkip'], ['field' => 'question', 'value' => $question]);
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                static::$logMessages['onSkip'],
+                ['field' => 'question', 'value' => $question]
+            );
         }
 
         $answers = $questionPage
@@ -266,9 +337,12 @@ class Parser
                 intval(
                     PDOAdapter::getQuestionIdFromDB($db,
                         $question,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
-                        static::$logMessages)[0]['question_id']),
+                        static::$logMessages)[0]['question_id']
+                ),
+                static::$debugLogger,
                 static::$logInfo,
                 static::$logError,
                 static::$logMessages)
@@ -277,33 +351,59 @@ class Parser
                 intval(
                     PDOAdapter::getQuestionIdFromDB($db,
                         $question,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
-                        static::$logMessages)[0]['question_id']),
+                        static::$logMessages)[0]['question_id']
+                ),
                 $answer,
                 strlen($answer),
                 intval(
                     PDOAdapter::getCharIdFromDB($db,
                         $character,
+                        static::$debugLogger,
                         static::$logInfo,
                         static::$logError,
                         static::$logMessages)[0]['char_id']),
+                static::$debugLogger,
                 static::$logInfo,
                 static::$logError,
                 static::$logMessages
             );
         } else {
-            static::$logInfo->info(static::$logMessages['onSkip'], ['field' => 'answer', 'value' => $answer]);
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                static::$logMessages['onSkip'],
+                ['field' => 'answer', 'value' => $answer]
+            );
         }
     }
 
     public static function checkForDuplicateEntries($tableName, $whereValue, $result, $field): bool
     {
-        static::$logInfo->info(static::$logMessages['checkDuplicate'], ['table' => $tableName, 'field' => $field, 'value' => $whereValue]);
+        static::logOrDebug(static::$logInfo,
+            static::$debugLogger,
+            'info',
+            static::$logMessages['checkDuplicate'],
+            ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
+        );
         if (isset($result[0])) {
-            static::$logInfo->info(static::$logMessages['onFound'], ['table' => $tableName, 'field' => $field, 'value' => $whereValue]);            return false;
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                static::$logMessages['onFound'],
+                ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
+            );
+            return false;
         } else {
-            static::$logInfo->info(static::$logMessages['onNotFound'], ['table' => $tableName, 'field' => $field, 'value' => $whereValue]);            return true;
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                static::$logMessages['onNotFound'],
+                ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
+            );
+            return true;
         }
     }
 
@@ -319,8 +419,18 @@ class Parser
         try {
             $chunkedArray = array_chunk($arrayOfCharacterAnchors, ceil(count($arrayOfCharacterAnchors) / $_ENV['THREAD_NUM']));
             $arrayLength = count($chunkedArray);
-            static::$logInfo->info('Creating "{number}" threads of execution!', ['number' => $_ENV['THREAD_NUM']]);
-            static::$logInfo->info('Array chunked into "{number}" parts!', ['number' => $arrayLength]);
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                'Creating "{number}" threads of execution!',
+                ['number' => $_ENV['THREAD_NUM']]
+            );
+            static::logOrDebug(static::$logInfo,
+                static::$debugLogger,
+                'info',
+                'Array chunked into "{number}" parts!',
+                ['number' => $arrayLength]
+            );
 
             for ($j = 0; $j < count($chunkedArray); $j++) {
                 $subArray = $chunkedArray[$j];
@@ -328,12 +438,27 @@ class Parser
                 $pid = pcntl_fork();
 
                 if ($pid == -1) {
-                    static::$logInfo->info('Error forking...');
+                    static::logOrDebug(static::$logInfo,
+                        static::$debugLogger,
+                        'info',
+                        'Error forking...'
+                    );
                     exit();
                 } else if (!$pid) {
                     // make new connection in the child process.
-                    $db = PDOAdapter::forceCreateConnectionToDB($j, static::$logInfo, static::$logError, static::$logMessages);
-                    static::$logInfo->info('Executing "fork #{number}"', ['number' => $j]);
+                    $db = PDOAdapter::forceCreateConnectionToDB(
+                        $j,
+                        static::$debugLogger,
+                        static::$logInfo,
+                        static::$logError,
+                        static::$logMessages
+                    );
+                    static::logOrDebug(static::$logInfo,
+                        static::$debugLogger,
+                        'info',
+                        'Executing "fork #{number}"',
+                        ['number' => $j]
+                    );
                     for ($i = 0; $i < count($subArray); $i++) {
                         $anchor = $subArray[$i];
                         if (strlen($anchor->getAttribute('href')) === 1) {
@@ -345,12 +470,17 @@ class Parser
                     exit;
                 } else {
                     // parent node
-                    PDOAdapter::forceCloseConnectionToDB(static::$logInfo);
+                    PDOAdapter::forceCloseConnectionToDB(static::$debugLogger, static::$logInfo);
                 }
             }
             while (pcntl_waitpid(0, $status) != -1) ;
         } catch (InvalidSelectorException $exception) {
-            static::$logError->error(static::$logMessages['onError'], ['message' => $exception->getMessage(), 'number' => $exception->getLine()]);
+            static::logOrDebug(static::$logError,
+                static::$debugLogger,
+                'error',
+                static::$logMessages['onError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+            );
         }
     }
 
