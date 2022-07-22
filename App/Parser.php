@@ -39,7 +39,11 @@ class Parser
     {
     }
 
-
+    /**
+     * Registering loggers to work with, also can be used to drop & create DB in MYSQL (uncomment appropriate line)
+     *
+     * @return void
+     */
     public static function initializeParser(): void
     {
         $dateFormat = "Y-m-d H:i:s";
@@ -76,7 +80,9 @@ class Parser
     }
 
     /**
+     * Drop existing tables connected to task and create fresh ones
      *
+     * @return void
      */
     public static function dropNCreate(): void
     {
@@ -85,11 +91,13 @@ class Parser
     }
 
     /**
-     * @param Logger $logger
-     * @param Logger $debugger
-     * @param string $logType
-     * @param array|string $logMessage
-     * @param array $params
+     * Performing logging process according to DEBUG_MODE in .env
+     *
+     * @param Logger $logger - logger instance to log in normal mode
+     * @param Logger $debugger - logger instance to log in debug mode
+     * @param string $logType - log type to write in log stream
+     * @param array|string $logMessage - log message to write in log stream (prepared or custom string)
+     * @param array $params - array of parameters handled by PsrLogMessageProcessor
      * @return void
      */
     public static function logOrDebug(Logger $logger, Logger $debugger, string $logType, array|string $logMessage, array $params = []): void
@@ -102,7 +110,9 @@ class Parser
     }
 
     /**
-     * @param string $href
+     * Create a new instance of DiDom\Document from given url
+     *
+     * @param string $href - url to create from
      * @return Document
      */
     public static function createNewDocument(string $href = ''): Document
@@ -126,8 +136,10 @@ class Parser
     }
 
     /**
-     * @param Document $doc
-     * @param string $needle
+     * Parse DiDom\Document to find a needle element
+     *
+     * @param Document $doc - document where you're searching in
+     * @param string $needle - an element that you're searching for
      * @return \DiDom\Element[]|\DOMElement[]|void
      */
     public static function parseArrayOfElementsFromDocument(Document $doc, string $needle)
@@ -152,7 +164,9 @@ class Parser
     }
 
     /**
-     * @param array $array
+     * Insert characters to table from an array of DiDom\Document anchor elements
+     *
+     * @param array $array - an array of elements
      * @return void
      */
     public static function insertCharactersFromAnchors(array $array): void
@@ -192,8 +206,10 @@ class Parser
     }
 
     /**
-     * @param Document $doc
-     * @param string $needle
+     * Create an array with content "href" => "innerHTML" from DiDom\Document table
+     *
+     * @param Document $doc - table to create from
+     * @param string $needle - needle to search in table
      * @return array
      */
     public static function makeArrayFromTable(Document $doc, string $needle): array
@@ -207,8 +223,10 @@ class Parser
     }
 
     /**
-     * @param string $character
-     * @param Element $seiteLink
+     * Insert interval to MYSQL table
+     *
+     * @param string $character - letter to search for a char_id to create table reference
+     * @param Element $seiteLink - DiDom\Document element to parse interval name
      * @return void
      */
     public static function insertIntervalOfAnswers(PDO $db, string $character, Element $seiteLink): void
@@ -254,9 +272,11 @@ class Parser
     }
 
     /**
-     * @param Document $questionPage
-     * @param string $character
-     * @param string $interval
+     * Insert question and  answer in MYSQL table
+     *
+     * @param Document $questionPage - DiDom\Document element to parse question, answer and answer length from
+     * @param string $character - letter to search for a char_id to create table reference
+     * @param string $interval - interval to search for an interval_id to create table reference
      * @return void
      * @throws InvalidSelectorException
      */
@@ -329,6 +349,15 @@ class Parser
         }
     }
 
+    /**
+     * Insert answer in MYSQL table
+     *
+     * @param $db - DB connection to work with DB
+     * @param $answer - answer to insert
+     * @param $question - question to search for question_id to create table reference
+     * @param $character - letter to search for char_id to create table reference
+     * @return void
+     */
     public static function insertAnswer($db, $answer, $question, $character): void
     {
         if (
@@ -380,6 +409,15 @@ class Parser
         }
     }
 
+    /**
+     * Processing $result parameter for duplicate entries of  given element (letter, interval or question)
+     *
+     * @param $tableName - table searched in
+     * @param $whereValue - element value searched for
+     * @param $result - resulting array from search process
+     * @param $field - element searched for (letter, interval or question)
+     * @return bool
+     */
     public static function checkForDuplicateEntries($tableName, $whereValue, $result, $field): bool
     {
         static::logOrDebug(static::$logInfo,
@@ -407,6 +445,12 @@ class Parser
         }
     }
 
+    /**
+     * Perform general parse process. Includes creating documents from given url, inserting characters to DB,
+     * checking for duplicates and performing multithreading processes
+     *
+     * @return void
+     */
     public static function doParse()
     {
 
@@ -484,6 +528,14 @@ class Parser
         }
     }
 
+    /**
+     * Performing specific parse processes for intervals, questions and answers.
+     *
+     * @param $anchor - DiDom\Document element with character
+     * @param $db - DB connection to work with
+     * @return void
+     * @throws InvalidSelectorException
+     */
     public static function doJob($anchor, $db): void
     {
         $character = $anchor->getAttribute('href');
