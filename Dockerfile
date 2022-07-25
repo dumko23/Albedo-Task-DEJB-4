@@ -8,5 +8,5 @@ RUN docker-php-ext-configure pcntl --enable-pcntl \
   && docker-php-ext-install \
     pcntl
 
-CMD [ "php", "./App/parser-test2.php" ]
+CMD [ "php", "./App/index.php" ]
 
