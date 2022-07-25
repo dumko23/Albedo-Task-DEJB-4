@@ -104,7 +104,7 @@ class Parser
     {
         if ($_ENV['DEBUG_MODE'] === "ON") {
             $debugger->$logType($logMessage, $params);
-        } else if ($_ENV['DEBUG_MODE'] === "OFF"){
+        } else if ($_ENV['DEBUG_MODE'] === "OFF") {
             $logger->$logType($logMessage, $params);
         }
     }
@@ -192,7 +192,7 @@ class Parser
                         'letter'
                     )
                 ) {
-                    PDOAdapter::insertCharToDB($character, static::$debugLogger,  static::$logInfo, static::$logError, static::$logMessages);
+                    PDOAdapter::insertCharToDB($character, static::$debugLogger, static::$logInfo, static::$logError, static::$logMessages);
                 } else {
                     static::logOrDebug(static::$logInfo,
                         static::$debugLogger,
@@ -476,48 +476,66 @@ class Parser
                 ['number' => $arrayLength]
             );
 
-            for ($j = 0; $j < count($chunkedArray); $j++) {
-                $subArray = $chunkedArray[$j];
+            if ($_ENV['THREAD_NUM'] > 1) {
 
-                $pid = pcntl_fork();
+                for ($j = 0; $j < count($chunkedArray); $j++) {
+                    $subArray = $chunkedArray[$j];
 
-                if ($pid == -1) {
-                    static::logOrDebug(static::$logInfo,
-                        static::$debugLogger,
-                        'info',
-                        'Error forking...'
-                    );
-                    exit();
-                } else if (!$pid) {
-                    // make new connection in the child process.
-                    $db = PDOAdapter::forceCreateConnectionToDB(
-                        $j,
-                        static::$debugLogger,
-                        static::$logInfo,
-                        static::$logError,
-                        static::$logMessages
-                    );
-                    static::logOrDebug(static::$logInfo,
-                        static::$debugLogger,
-                        'info',
-                        'Executing "fork #{number}"',
-                        ['number' => $j]
-                    );
-                    for ($i = 0; $i < count($subArray); $i++) {
-                        $anchor = $subArray[$i];
-                        if (strlen($anchor->getAttribute('href')) === 1) {
-                            //
-                            Parser::doJob($anchor, $db);
-                            //
+                    $pid = pcntl_fork();
+
+                    if ($pid == -1) {
+                        static::logOrDebug(static::$logInfo,
+                            static::$debugLogger,
+                            'info',
+                            'Error forking...'
+                        );
+                        exit();
+                    } else if (!$pid) {
+                        // make new connection in the child process.
+                        $db = PDOAdapter::forceCreateConnectionToDB(
+                            $j,
+                            static::$debugLogger,
+                            static::$logInfo,
+                            static::$logError,
+                            static::$logMessages
+                        );
+                        static::logOrDebug(static::$logInfo,
+                            static::$debugLogger,
+                            'info',
+                            'Executing "fork #{number}"',
+                            ['number' => $j]
+                        );
+                        for ($i = 0; $i < count($subArray); $i++) {
+                            $anchor = $subArray[$i];
+                            if (strlen($anchor->getAttribute('href')) === 1) {
+                                //
+                                Parser::doJob($anchor, $db);
+                                //
+                            }
                         }
+                        exit;
+                    } else {
+                        // parent node
+                        PDOAdapter::forceCloseConnectionToDB(static::$debugLogger, static::$logInfo);
                     }
-                    exit;
-                } else {
-                    // parent node
-                    PDOAdapter::forceCloseConnectionToDB(static::$debugLogger, static::$logInfo);
+                }
+                while (pcntl_waitpid(0, $status) != -1) ;
+
+            } else {
+                foreach ($arrayOfCharacterAnchors as $anchor) {
+                    if (strlen($anchor->getAttribute('href')) === 1) {
+                        //
+                        Parser::doJob($anchor, PDOAdapter::db(
+                            static::$debugLogger,
+                            static::$logInfo,
+                            static::$logError,
+                            static::$logMessages)
+                        );
+                        //
+                    }
                 }
             }
-            while (pcntl_waitpid(0, $status) != -1) ;
+
         } catch (InvalidSelectorException $exception) {
             static::logOrDebug(static::$logError,
                 static::$debugLogger,
