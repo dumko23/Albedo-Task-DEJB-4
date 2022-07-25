@@ -31,7 +31,7 @@ class LoggingAdapter
     /**
      * Registering loggers to work with
      *
-     * @return void
+     * @return  void
      */
     public static function initializeLogger(): void
     {
@@ -64,11 +64,11 @@ class LoggingAdapter
     /**
      * Performing logging process according to DEBUG_MODE in .env
      *
-     * @param Logger $logger - logger instance to log in normal mode
-     * @param string $logMethod - log method to write in log stream (info / error)
-     * @param array|string $logMessage - log message to write in log stream (prepared or custom string)
-     * @param array $params - array of parameters handled by PsrLogMessageProcessor
-     * @return void
+     * @param  Logger  $logger - logger instance to log in normal mode
+     * @param  string  $logMethod - log method to write in log stream (info / error)
+     * @param  array|string  $logMessage - log message to write in log stream (prepared or custom string)
+     * @param  array  $params - array of parameters handled by PsrLogMessageProcessor
+     * @return  void
      */
     public static function logOrDebug(Logger $logger, string $logMethod, array|string $logMessage, array $params = []): void
     {
