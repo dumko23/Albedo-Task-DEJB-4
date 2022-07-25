@@ -10,10 +10,15 @@ class PDOAdapter
 {
     private static PDO|null $db;
 
-    public function __construct()
-    {
-    }
-
+    /**
+     * DB connection used by parent before forking
+     *
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return PDO - instance of PDO DB connection
+     */
     public static function db(Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): PDO
     {
         try {
@@ -41,7 +46,17 @@ class PDOAdapter
         }
     }
 
-    public static function forceCreateConnectionToDB($forkNumber, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): PDO
+    /**
+     * Creating a DB connection for child processes
+     *
+     * @param int $forkNumber - number of child process in use
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return PDO - instance of PDO DB connection
+     */
+    public static function forceCreateConnectionToDB(int $forkNumber, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): PDO
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -71,6 +86,13 @@ class PDOAdapter
         }
     }
 
+    /**
+     * Closing parent DB connection
+     *
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @return void
+     */
     public static function forceCloseConnectionToDB(Logger $debugger, Logger $logInfo): void
     {
         Parser::logOrDebug($logInfo,
@@ -86,7 +108,17 @@ class PDOAdapter
         );
     }
 
-    public static function insertCharToDB($char, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
+    /**
+     * Inserting character into DB table
+     *
+     * @param string $char - character to insert
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
+    public static function insertCharToDB(string $char, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -114,7 +146,18 @@ class PDOAdapter
         }
     }
 
-    public static function getCharIdFromDB($dbConnection, $char, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
+    /**
+     * Getting char_id from DB by passing single character (in lowercase) to the "where" clause
+     *
+     * @param PDO $dbConnection - instance of DB connection
+     * @param string $char - character to search in DB table
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return bool|array
+     */
+    public static function getCharIdFromDB(PDO $dbConnection, string $char, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -136,7 +179,18 @@ class PDOAdapter
         }
     }
 
-    public static function getIntervalIdFromDB($dbConnection, $interval, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
+    /**
+     * Getting interval_id from DB by passing interval name (e.g. a-200) to the "where" clause
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param string $interval - interval name to search in DB table
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return bool|array
+     */
+    public static function getIntervalIdFromDB(PDO $dbConnection, string $interval, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -158,7 +212,18 @@ class PDOAdapter
         }
     }
 
-    public static function getQuestionIdFromDB($dbConnection, $question, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
+    /**
+     * Getting question_id from DB by passing question string to the "where" clause
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param string $question - interval name to search in DB table
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return bool|array
+     */
+    public static function getQuestionIdFromDB(PDO $dbConnection, string $question, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): bool|array
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -180,7 +245,20 @@ class PDOAdapter
         }
     }
 
-    public static function checkAnswerInDB($dbConnection, $whereValue1, $whereValue2, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages)
+    /**
+     * Getting answer_id from DB by passing answer string and question_id number to the "where" clauses.
+     * If returning array has one or more records - there's a duplicate answer for the same question in DB table
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param string $whereValue1 - answer string to search in DB table
+     * @param int $whereValue2 - question_id number bound to searched answer
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return bool|void
+     */
+    public static function checkAnswerInDB(PDO $dbConnection, string $whereValue1, int $whereValue2, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages)
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -217,11 +295,21 @@ class PDOAdapter
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
             );
         }
-
-
     }
 
-    public static function insertIntervalToDB($dbConnection, $char_id, $interval_name, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
+    /**
+     * Insert interval into DB table
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param int $char_id - char_id to bind interval to
+     * @param string $interval_name - interval_name to insert
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
+    public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -248,7 +336,20 @@ class PDOAdapter
         }
     }
 
-    public static function insertQuestionToDB($dbConnection, $char_id, $interval_id, $question, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
+    /**
+     * Insert question into DB table
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param int $char_id - char_id to bind question to
+     * @param int $interval_id - interval_id to bind question to
+     * @param string $question - question to insert into DB table
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
+    public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -275,7 +376,21 @@ class PDOAdapter
         }
     }
 
-    public static function insertAnswerToDB($dbConnection, $question_id, $answer, $length, $char_id, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
+    /**
+     * Insert answer into DB table
+     *
+     * @param PDO $dbConnection - instance of PDO DB connection
+     * @param int $question_id - question_id to bind answer to
+     * @param string $answer - answer to insert
+     * @param int $length - inserted answer length
+     * @param int $char_id - char_id to bind answer with
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
+    public static function insertAnswerToDB(PDO $dbConnection, int $question_id, string $answer, int $length, int $char_id, Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
             Parser::logOrDebug($logInfo,
@@ -302,6 +417,15 @@ class PDOAdapter
         }
     }
 
+    /**
+     * Dropping all existing table connected to this project
+     *
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
     public static function dropTables(Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
@@ -329,9 +453,17 @@ class PDOAdapter
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
             );
         }
-
     }
 
+    /**
+     * Create all tables connected to the project
+     *
+     * @param Logger $debugger - debug Logger instance
+     * @param Logger $logInfo - info Logger instance
+     * @param Logger $logError - error Logger instance
+     * @param array $logMessages - array of log messages
+     * @return void
+     */
     public static function createTables(Logger $debugger, Logger $logInfo, Logger $logError, array $logMessages): void
     {
         try {
