@@ -12,7 +12,7 @@ class PDOAdapter
     /**
      * DB connection used by parent before forking
      *
-     * @return  PDO - instance of PDO DB connection
+     * @return  PDO  instance of PDO DB connection
      */
     public static function db(): PDO
     {
@@ -54,8 +54,8 @@ class PDOAdapter
     /**
      * Creating a DB connection for child processes
      *
-     * @param  int  $forkNumber  - number of child process in use
-     * @return  PDO - instance of PDO DB connection
+     * @param  int  $forkNumber  number of child process in use
+     * @return  PDO  instance of PDO DB connection
      */
     public static function forceCreateConnectionToDB(int $forkNumber): PDO
     {
@@ -110,7 +110,7 @@ class PDOAdapter
     /**
      * Inserting character into DB table
      *
-     * @param  string  $char  - character to insert
+     * @param  string  $char  character to insert
      * @return  void
      */
     public static function insertCharToDB(string $char): void
@@ -141,6 +141,13 @@ class PDOAdapter
         }
     }
 
+    /**
+     * Inserting url into DB table
+     *
+     * @param  PDO  $dbConnection  instance of DB connection
+     * @param  string  $url  character to insert
+     * @return  void
+     */
     public static function insertUrlToDB(PDO $dbConnection, string $url): void
     {
         try {
@@ -172,8 +179,8 @@ class PDOAdapter
     /**
      * Getting char_id from DB by passing single character (in lowercase) to the "where" clause
      *
-     * @param  PDO  $dbConnection  - instance of DB connection
-     * @param  string  $char  - character to search in DB table
+     * @param  PDO  $dbConnection  instance of DB connection
+     * @param  string  $char  character to search in DB table
      * @return  bool|array
      */
     public static function getCharIdFromDB(PDO $dbConnection, string $char): bool|array
@@ -198,6 +205,13 @@ class PDOAdapter
         }
     }
 
+    /**
+     * Getting url_id from DB by passing url string to the "where" clause
+     *
+     * @param  PDO  $dbConnection  instance of DB connection
+     * @param  string  $url  url to search in DB table
+     * @return  bool|array
+     */
     public static function getUrlIdFromDB(PDO $dbConnection, string $url): bool|array
     {
         try {
@@ -223,8 +237,8 @@ class PDOAdapter
     /**
      * Getting interval_id from DB by passing interval name (e.g. a-200) to the "where" clause
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  string  $interval  - interval name to search in DB table
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  string  $interval  interval name to search in DB table
      * @return  bool|array
      */
     public static function getIntervalIdFromDB(PDO $dbConnection, string $interval): bool|array
@@ -252,8 +266,8 @@ class PDOAdapter
     /**
      * Getting question_id from DB by passing question string to the "where" clause
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  string  $question  - interval name to search in DB table
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  string  $question  interval name to search in DB table
      * @return  bool|array
      */
     public static function getQuestionIdFromDB(PDO $dbConnection, string $question): bool|array
@@ -282,9 +296,9 @@ class PDOAdapter
      * Getting answer_id from DB by passing answer string and question_id number to the "where" clauses.
      * If returning array has one or more records - there's a duplicate answer for the same question in DB table
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  string  $whereValue1  - answer string to search in DB table
-     * @param  int  $whereValue2  - question_id number bound to searched answer
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  string  $whereValue1  answer string to search in DB table
+     * @param  int  $whereValue2  question_id number bound to searched answer
      * @return  bool|void
      */
     public static function checkAnswerInDB(PDO $dbConnection, string $whereValue1, int $whereValue2)
@@ -329,9 +343,9 @@ class PDOAdapter
     /**
      * Insert interval into DB table
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  int  $char_id  - char_id to bind interval to
-     * @param  string  $interval_name  - interval_name to insert
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  int  $char_id  char_id to bind interval to
+     * @param  string  $interval_name  interval_name to insert
      * @return  void
      */
     public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name): void
@@ -364,10 +378,10 @@ class PDOAdapter
     /**
      * Insert question into DB table
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  int  $char_id  - char_id to bind question to
-     * @param  int  $interval_id  - interval_id to bind question to
-     * @param  string  $question  - question to insert into DB table
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  int  $char_id  char_id to bind question to
+     * @param  int  $interval_id  interval_id to bind question to
+     * @param  string  $question  question to insert into DB table
      * @return  void
      */
     public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question): void
@@ -400,11 +414,11 @@ class PDOAdapter
     /**
      * Insert answer into DB table
      *
-     * @param  PDO  $dbConnection  - instance of PDO DB connection
-     * @param  int  $question_id  - question_id to bind answer to
-     * @param  string  $answer  - answer to insert
-     * @param  int  $length  - inserted answer length
-     * @param  int  $char_id  - char_id to bind answer with
+     * @param  PDO  $dbConnection  instance of PDO DB connection
+     * @param  int  $question_id  question_id to bind answer to
+     * @param  string  $answer  answer to insert
+     * @param  int  $length  inserted answer length
+     * @param  int  $char_id  char_id to bind answer with
      * @return  void
      */
     public static function insertAnswerToDB(PDO $dbConnection, int $question_id, string $answer, int $length, int $char_id): void
