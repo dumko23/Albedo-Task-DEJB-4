@@ -43,7 +43,7 @@ class Parser
     /**
      * Create a new instance of DiDom\Document from given url
      *
-     * @param  string  $href - url to create from
+     * @param  string  $href  - url to create from
      * @return  Document
      */
     public static function createNewDocument(string $href = ''): Document
@@ -67,8 +67,8 @@ class Parser
     /**
      * Parse DiDom\Document to find a needle element
      *
-     * @param  Document  $doc - document where you're searching in
-     * @param  string  $needle - an element that you're searching for
+     * @param  Document  $doc  - document where you're searching in
+     * @param  string  $needle  - an element that you're searching for
      * @return  Element[]|\DOMElement[]|void
      */
     public static function parseArrayOfElementsFromDocument(Document $doc, string $needle)
@@ -93,7 +93,7 @@ class Parser
     /**
      * Insert characters to table from an array of DiDom\Document anchor elements
      *
-     * @param  array  $array - an array of elements
+     * @param  array  $array  - an array of elements
      * @return  void
      */
     public static function insertCharactersFromAnchors(array $array): void
@@ -124,8 +124,8 @@ class Parser
     /**
      * Create an array with content "href" => "innerHTML" from DiDom\Document table
      *
-     * @param  Document  $doc - table to create from
-     * @param  string  $needle - needle to search in table
+     * @param  Document  $doc  - table to create from
+     * @param  string  $needle  - needle to search in table
      * @return  array
      */
     public static function makeArrayFromTable(Document $doc, string $needle): array
@@ -142,8 +142,8 @@ class Parser
      * Insert interval to MYSQL table
      *
      * @param  PDO  $db
-     * @param  string  $character - letter to search for a char_id to create table reference
-     * @param  Element  $seiteLink - DiDom\Document element to parse interval name
+     * @param  string  $character  - letter to search for a char_id to create table reference
+     * @param  Element  $seiteLink  - DiDom\Document element to parse interval name
      * @return void
      */
     public static function insertIntervalOfAnswers(PDO $db, string $character, Element $seiteLink): void
@@ -152,7 +152,7 @@ class Parser
         if (
             static::checkForDuplicateEntries(
                 'interval_id',
-                $seiteLink->getAttribute('href'),
+                $interval,
                 PDOAdapter::getIntervalIdFromDB($db, $interval),
                 'interval_name'
             )
@@ -174,9 +174,9 @@ class Parser
      * Insert question and  answer in MYSQL table
      *
      * @param  PDO  $db
-     * @param  Document  $questionPage - DiDom\Document element to parse question, answer and answer length from
-     * @param  string  $character - letter to search for a char_id to create table reference
-     * @param  string  $interval - interval to search for an interval_id to create table reference
+     * @param  Document  $questionPage  - DiDom\Document element to parse question, answer and answer length from
+     * @param  string  $character  - letter to search for a char_id to create table reference
+     * @param  string  $interval  - interval to search for an interval_id to create table reference
      * @return  void
      * @throws  InvalidSelectorException
      */
@@ -233,10 +233,10 @@ class Parser
     /**
      * Insert answer in MYSQL table
      *
-     * @param  PDO  $db - DB connection to work with DB
-     * @param  string  $answer - answer to insert
-     * @param  string  $question - question to search for question_id to create table reference
-     * @param  string  $character - letter to search for char_id to create table reference
+     * @param  PDO  $db  - DB connection to work with DB
+     * @param  string  $answer  - answer to insert
+     * @param  string  $question  - question to search for question_id to create table reference
+     * @param  string  $character  - letter to search for char_id to create table reference
      * @return  void
      */
     public static function insertAnswer(PDO $db, string $answer, string $question, string $character): void
@@ -267,10 +267,10 @@ class Parser
     /**
      * Processing $result parameter for duplicate entries of  given element (letter, interval or question)
      *
-     * @param  string  $tableName - table searched in
-     * @param  string  $whereValue - element value searched for
-     * @param  array  $result - resulting array from search process
-     * @param  string  $field - element searched for (letter, interval or question)
+     * @param  string  $tableName  - table searched in
+     * @param  string  $whereValue  - element value searched for
+     * @param  array  $result  - resulting array from search process
+     * @param  string  $field  - element searched for (letter, interval or question)
      * @return  bool
      */
     public static function checkForDuplicateEntries(string $tableName, string $whereValue, array $result, string $field): bool
@@ -385,8 +385,8 @@ class Parser
     /**
      * Performing specific parse processes for intervals, questions and answers.
      *
-     * @param  Element  $anchor - DiDom\Document element with character
-     * @param  PDO  $db - DB connection to work with
+     * @param  Element  $anchor  - DiDom\Document element with character
+     * @param  PDO  $db  - DB connection to work with
      * @return  void
      * @throws  InvalidSelectorException
      */
@@ -400,16 +400,30 @@ class Parser
 
         foreach ($listOfIntervals as $interval) {
             $intervalName = $interval->getAttribute('href');
-            Parser::insertIntervalOfAnswers($db, $character, $interval);
+            if (self::checkForDuplicateEntries(
+                'url_queue',
+                $_ENV['URL'] . $intervalName,
+                PDOAdapter::getUrlIdFromDB(
+                    $db,
+                    $_ENV['URL'] . $intervalName
+                ),
+                'url'
+            )
+            ) {
+                Parser::insertIntervalOfAnswers($db, $character, $interval);
 
-            $tableOfQuestions = Parser::createNewDocument($intervalName);
+                $tableOfQuestions = Parser::createNewDocument($intervalName);
+                $arrayOfQuestions = Parser::makeArrayFromTable($tableOfQuestions, 'tbody');
 
-            $arrayOfQuestions = Parser::makeArrayFromTable($tableOfQuestions, 'tbody');
+                foreach ($arrayOfQuestions as $link => $question) {
+                    $answerPage = Parser::createNewDocument($link);
+                    Parser::insertQuestionAndAnswer($db, $answerPage, $character, $intervalName);
+                }
 
-            foreach ($arrayOfQuestions as $link => $question) {
-
-                $answerPage = Parser::createNewDocument($link);
-                Parser::insertQuestionAndAnswer($db, $answerPage, $character, $intervalName);
+                PDOAdapter::insertUrlToDB(
+                    $db,
+                    $_ENV['URL'] . $intervalName
+                );
             }
         }
     }

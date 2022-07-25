@@ -54,7 +54,7 @@ class PDOAdapter
     /**
      * Creating a DB connection for child processes
      *
-     * @param  int  $forkNumber - number of child process in use
+     * @param  int  $forkNumber  - number of child process in use
      * @return  PDO - instance of PDO DB connection
      */
     public static function forceCreateConnectionToDB(int $forkNumber): PDO
@@ -110,7 +110,7 @@ class PDOAdapter
     /**
      * Inserting character into DB table
      *
-     * @param  string  $char - character to insert
+     * @param  string  $char  - character to insert
      * @return  void
      */
     public static function insertCharToDB(string $char): void
@@ -141,11 +141,39 @@ class PDOAdapter
         }
     }
 
+    public static function insertUrlToDB(PDO $dbConnection, string $url): void
+    {
+        try {
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                LoggingAdapter::$logMessages['onInsert'],
+                ['table' => 'url_queue', 'field' => 'url', 'value' => $url]
+            );
+            $dbConnection->prepare('insert into parser_data.url_queue (url)
+                                values (?)')->execute(["$url"]);
+
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                LoggingAdapter::$logMessages['successInsert'],
+                ['table' => 'url_queue', 'field' => 'url', 'value' => $url]
+            );
+        } catch (PDOException $exception) {
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logError,
+                'error',
+                LoggingAdapter::$logMessages['onPDOError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+            );
+        }
+    }
+
     /**
      * Getting char_id from DB by passing single character (in lowercase) to the "where" clause
      *
-     * @param  PDO  $dbConnection - instance of DB connection
-     * @param  string  $char - character to search in DB table
+     * @param  PDO  $dbConnection  - instance of DB connection
+     * @param  string  $char  - character to search in DB table
      * @return  bool|array
      */
     public static function getCharIdFromDB(PDO $dbConnection, string $char): bool|array
@@ -170,11 +198,33 @@ class PDOAdapter
         }
     }
 
+    public static function getUrlIdFromDB(PDO $dbConnection, string $url): bool|array
+    {
+        try {
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                LoggingAdapter::$logMessages['onSelect'],
+                ['table' => 'url_queue', 'something' => 'url', 'value' => $url]
+            );
+            $queryGet = $dbConnection->prepare('select url_id from parser_data.url_queue where url = ?');
+            $queryGet->execute(["$url"]);
+            return $queryGet->fetchAll();
+        } catch (PDOException $exception) {
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logError,
+                'error',
+                LoggingAdapter::$logMessages['onPDOError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+            );
+        }
+    }
+
     /**
      * Getting interval_id from DB by passing interval name (e.g. a-200) to the "where" clause
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  string  $interval - interval name to search in DB table
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  string  $interval  - interval name to search in DB table
      * @return  bool|array
      */
     public static function getIntervalIdFromDB(PDO $dbConnection, string $interval): bool|array
@@ -202,8 +252,8 @@ class PDOAdapter
     /**
      * Getting question_id from DB by passing question string to the "where" clause
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  string  $question - interval name to search in DB table
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  string  $question  - interval name to search in DB table
      * @return  bool|array
      */
     public static function getQuestionIdFromDB(PDO $dbConnection, string $question): bool|array
@@ -232,9 +282,9 @@ class PDOAdapter
      * Getting answer_id from DB by passing answer string and question_id number to the "where" clauses.
      * If returning array has one or more records - there's a duplicate answer for the same question in DB table
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  string  $whereValue1 - answer string to search in DB table
-     * @param  int  $whereValue2 - question_id number bound to searched answer
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  string  $whereValue1  - answer string to search in DB table
+     * @param  int  $whereValue2  - question_id number bound to searched answer
      * @return  bool|void
      */
     public static function checkAnswerInDB(PDO $dbConnection, string $whereValue1, int $whereValue2)
@@ -279,9 +329,9 @@ class PDOAdapter
     /**
      * Insert interval into DB table
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  int  $char_id - char_id to bind interval to
-     * @param  string  $interval_name - interval_name to insert
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  int  $char_id  - char_id to bind interval to
+     * @param  string  $interval_name  - interval_name to insert
      * @return  void
      */
     public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name): void
@@ -314,10 +364,10 @@ class PDOAdapter
     /**
      * Insert question into DB table
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  int  $char_id - char_id to bind question to
-     * @param  int  $interval_id - interval_id to bind question to
-     * @param  string  $question - question to insert into DB table
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  int  $char_id  - char_id to bind question to
+     * @param  int  $interval_id  - interval_id to bind question to
+     * @param  string  $question  - question to insert into DB table
      * @return  void
      */
     public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question): void
@@ -350,11 +400,11 @@ class PDOAdapter
     /**
      * Insert answer into DB table
      *
-     * @param  PDO  $dbConnection - instance of PDO DB connection
-     * @param  int  $question_id - question_id to bind answer to
-     * @param  string  $answer - answer to insert
-     * @param  int  $length - inserted answer length
-     * @param  int  $char_id - char_id to bind answer with
+     * @param  PDO  $dbConnection  - instance of PDO DB connection
+     * @param  int  $question_id  - question_id to bind answer to
+     * @param  string  $answer  - answer to insert
+     * @param  int  $length  - inserted answer length
+     * @param  int  $char_id  - char_id to bind answer with
      * @return  void
      */
     public static function insertAnswerToDB(PDO $dbConnection, int $question_id, string $answer, int $length, int $char_id): void
@@ -402,6 +452,7 @@ class PDOAdapter
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.char_interval')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.questions')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.answers')->execute();
+            static::db()->prepare('DROP TABLE IF EXISTS parser_data.url_queue')->execute();
             static::db()->prepare('SET foreign_key_checks = 1')->execute();
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
@@ -436,6 +487,13 @@ class PDOAdapter
                                         char_id int(15) auto_increment NOT NULL,
                                         letter char unique not null,
                                         PRIMARY KEY(char_id)
+                            )
+                        ')->execute();
+            static::db()->prepare(
+                'CREATE TABLE IF NOT EXISTS parser_data.url_queue (
+                                        url_id int(15) auto_increment NOT NULL,
+                                        url varchar(255) unique not null,
+                                        PRIMARY KEY(url_id)
                             )
                         ')->execute();
             static::db()->prepare(
