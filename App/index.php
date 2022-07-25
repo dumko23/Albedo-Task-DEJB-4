@@ -3,7 +3,7 @@
 
 require 'vendor/autoload.php';
 
-use App\Parser;
+use App\classes\Parser;
 use Dotenv\Dotenv;
 
 $dotenv = Dotenv::createImmutable(__DIR__);

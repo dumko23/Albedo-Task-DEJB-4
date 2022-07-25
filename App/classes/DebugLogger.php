@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\classes;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;

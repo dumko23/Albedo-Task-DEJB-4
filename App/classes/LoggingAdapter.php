@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\classes;
 
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
