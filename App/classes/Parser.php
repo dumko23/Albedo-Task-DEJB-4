@@ -2,17 +2,25 @@
 
 namespace App\classes;
 
+use App\classes\logging\LoggingAdapter;
 use DiDom\Document;
 use DiDom\Element;
 use DiDom\Exceptions\InvalidSelectorException;
 use Exception;
 use PDO;
-
+use Redis;
+use RedisException;
 
 class Parser
 {
+    public static array $pidList = [];
+    public static bool $parse = true;
+
+    public static Redis $redis;
+
     /**
-     * Initial Parser method - initializing logger to work with, also can be used to drop & create DB in MYSQL (uncomment appropriate line)
+     * Initial Parser method - initializing logger to work with, also can be used to drop & create DB in MYSQL
+     * (uncomment appropriate line)
      *
      * @return  void
      */
@@ -25,6 +33,32 @@ class Parser
             'info',
             'Initializing Parser...'
         );
+        try {
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Performing Redis connection...'
+            );
+            self::$redis = new Redis();
+            self::$redis->connect('redis-stack');
+
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Success...'
+            );
+
+            if (self::$redis->lLen('url') === 0) {
+                self::$redis->rPush('url', $_ENV['URL'] . '|CharParser');
+            }
+
+        } catch (RedisException $exception) {
+            LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
+                'error',
+                LoggingAdapter::$logMessages['onError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+            );
+        }
 
 //        Parser::dropNCreate(); // To initialize fresh tables
     }
@@ -43,23 +77,23 @@ class Parser
     /**
      * Create a new instance of DiDom\Document from given url
      *
-     * @param  string  $href  url to create from
+     * @param  string  $url  url to create from
      * @return  Document
      */
-    public static function createNewDocument(string $href = ''): Document
+    public static function createNewDocument(string $url = ''): Document
     {
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
             'Creating new document from {url}',
-            ['url' => $_ENV['URL'] . $href]
+            ['url' => $url]
         );
         try {
-            return new Document($_ENV['URL'] . $href, true);
+            return new Document($url, true);
         } catch (Exception $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -85,181 +119,7 @@ class Parser
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
-            );
-        }
-    }
-
-    /**
-     * Insert characters to table from an array of DiDom\Document anchor elements
-     *
-     * @param  array  $array  an array of elements
-     * @return  void
-     */
-    public static function insertCharactersFromAnchors(array $array): void
-    {
-        foreach ($array as $anchor) {
-            $character = $anchor->getAttribute('href');
-            if (strlen($character) === 1) {
-                if (
-                    static::checkForDuplicateEntries(
-                        'character_table',
-                        $anchor->getAttribute('href'),
-                        PDOAdapter::getCharIdFromDB(PDOAdapter::db(), $character),
-                        'letter'
-                    )
-                ) {
-                    PDOAdapter::insertCharToDB($character);
-                } else {
-                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                        'info',
-                        LoggingAdapter::$logMessages['onSkip'],
-                        ['field' => 'letter', 'value' => $character]
-                    );
-                }
-            }
-        }
-    }
-
-    /**
-     * Create an array with content "href" => "innerHTML" from DiDom\Document table
-     *
-     * @param  Document  $doc  table to create from
-     * @param  string  $needle  needle to search in table
-     * @return  array
-     */
-    public static function makeArrayFromTable(Document $doc, string $needle): array
-    {
-        $result = static::parseArrayOfElementsFromDocument($doc, $needle);
-        $resultArray = [];
-        for ($i = 0; $i < count($result); $i = $i + 2) {
-            $resultArray[$result[$i]->getAttribute('href')] = $result[$i + 1]->innerHtml();
-        }
-        return $resultArray;
-    }
-
-    /**
-     * Insert interval to MYSQL table
-     *
-     * @param  PDO  $db
-     * @param  string  $character  letter to search for a char_id to create table reference
-     * @param  Element  $seiteLink  DiDom\Document element to parse interval name
-     * @return void
-     */
-    public static function insertIntervalOfAnswers(PDO $db, string $character, Element $seiteLink): void
-    {
-        $interval = $seiteLink->getAttribute('href');
-        if (
-            static::checkForDuplicateEntries(
-                'interval_id',
-                $interval,
-                PDOAdapter::getIntervalIdFromDB($db, $interval),
-                'interval_name'
-            )
-        ) {
-            PDOAdapter::insertIntervalToDB($db,
-                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
-                $interval,
-            );
-        } else {
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['onSkip'],
-                ['field' => 'interval', 'value' => $interval]
-            );
-        }
-    }
-
-    /**
-     * Insert question and  answer in MYSQL table
-     *
-     * @param  PDO  $db
-     * @param  Document  $questionPage  DiDom\Document element to parse question, answer and answer length from
-     * @param  string  $character  letter to search for a char_id to create table reference
-     * @param  string  $interval  interval to search for an interval_id to create table reference
-     * @return  void
-     * @throws  InvalidSelectorException
-     */
-    public static function insertQuestionAndAnswer(PDO $db, Document $questionPage, string $character, string $interval): void
-    {
-        $question = $questionPage->find('#HeaderString')[0]->innerHtml();
-        if (
-            static::checkForDuplicateEntries(
-                'questions',
-                $question,
-                PDOAdapter::getQuestionIdFromDB(
-                    $db,
-                    $question,
-                ),
-                'question'
-            )
-        ) {
-            PDOAdapter::insertQuestionToDB($db,
-                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
-                intval(PDOAdapter::getIntervalIdFromDB($db, $interval)[0]['interval_id']),
-                $question
-            );
-        } else {
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['onSkip'],
-                ['field' => 'question', 'value' => $question]
-            );
-        }
-
-        $answers = $questionPage
-            ->find('td.Answer');
-
-        if (count($answers) > 1) {
-            for ($i = 0; $i < count($answers); $i++) {
-
-                $answer = $answers[$i]
-                    ->firstChild()
-                    ->getNode()
-                    ->textContent;
-
-                Parser::insertAnswer($db, $answer, $question, $character);
-            }
-        } else {
-            $answer = $answers[0]
-                ->firstChild()
-                ->getNode()
-                ->textContent;
-
-            Parser::insertAnswer($db, $answer, $question, $character);
-        }
-    }
-
-    /**
-     * Insert answer in MYSQL table
-     *
-     * @param  PDO  $db  DB connection to work with DB
-     * @param  string  $answer  answer to insert
-     * @param  string  $question  question to search for question_id to create table reference
-     * @param  string  $character  letter to search for char_id to create table reference
-     * @return  void
-     */
-    public static function insertAnswer(PDO $db, string $answer, string $question, string $character): void
-    {
-        if (
-            PDOAdapter::checkAnswerInDB($db,
-                $answer,
-                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']
-                )
-            )
-        ) {
-            PDOAdapter::insertAnswerToDB($db,
-                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']
-                ),
-                $answer,
-                strlen($answer),
-                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id'])
-            );
-        } else {
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['onSkip'],
-                ['field' => 'answer', 'value' => $answer]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -302,82 +162,158 @@ class Parser
      * checking for duplicates and performing multithreading processes
      *
      * @return  void
+     * @throws RedisException
      */
     public static function doParse(): void
     {
-
-        $mainDocument = Parser::createNewDocument();
-        $arrayOfCharacterAnchors = Parser::parseArrayOfElementsFromDocument($mainDocument, '.dnrg');
-
-        Parser::insertCharactersFromAnchors($arrayOfCharacterAnchors);
-
-
         try {
-            $chunkedArray = array_chunk($arrayOfCharacterAnchors, ceil(count($arrayOfCharacterAnchors) / $_ENV['THREAD_NUM']));
-            $arrayLength = count($chunkedArray);
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                'Creating "{number}" threads of execution!',
-                ['number' => $_ENV['THREAD_NUM']]
-            );
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                'Array chunked into "{number}" parts!',
-                ['number' => $arrayLength]
-            );
+            if (self::$redis->lIndex('url', 0) === $_ENV['URL'] . '|CharParser') {
+                self::doJob(self::$redis->lPop('url'));
+            }
 
-            if ($_ENV['THREAD_NUM'] > 1) {
+            pcntl_async_signals(true);
 
-                for ($j = 0; $j < count($chunkedArray); $j++) {
-                    $subArray = $chunkedArray[$j];
+            pcntl_signal(SIGTERM, function ($signal) {
+                if ($signal === SIGTERM) {
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Closing forks...'
+                    );
+                    self::$parse = false;
+                    if (count(self::$pidList) !== 0) {
+                        foreach (self::$pidList as $key => $pid) {
 
-                    $pid = pcntl_fork();
-
-                    if ($pid == -1) {
-                        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                            'info',
-                            'Error forking...'
-                        );
-                        exit();
-                    } else if (!$pid) {
-                        // make new connection in the child process.
-                        $db = PDOAdapter::forceCreateConnectionToDB($j);
-                        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                            'info',
-                            'Executing "fork #{number}"',
-                            ['number' => $j]
-                        );
-                        for ($i = 0; $i < count($subArray); $i++) {
-                            $anchor = $subArray[$i];
-                            if (strlen($anchor->getAttribute('href')) === 1) {
-                                //
-                                Parser::doJob($anchor, $db);
-                                //
+                            LoggingAdapter::logOrDebug(
+                                LoggingAdapter::$logInfo,
+                                'info',
+                                'Killing pid: {pid}...',
+                                ['pid' => $pid]
+                            );
+                                posix_kill($pid, SIGTERM);
+                                unset(self::$pidList[$key]);
                             }
                         }
-                        exit;
-                    } else {
-                        // parent node
-                        PDOAdapter::forceCloseConnectionToDB();
-                    }
-                }
-                while (pcntl_waitpid(0, $status) != -1) ;
 
-            } else {
-                foreach ($arrayOfCharacterAnchors as $anchor) {
-                    if (strlen($anchor->getAttribute('href')) === 1) {
-                        //
-                        Parser::doJob($anchor, PDOAdapter::db());
-                        //
+                    while(pcntl_waitpid(0, $status) != -1);
+
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Exiting parser...'
+                    );
+                    exit();
+                }
+            });
+
+            while (self::$parse) {
+                // TODO
+
+                self::$redis = new Redis();
+                self::$redis->connect('redis-stack');
+
+
+                if (count(self::$pidList) !== 0) {
+                    foreach (self::$pidList as $key => $pid) {
+                        $res = pcntl_waitpid($pid, $status, WNOHANG);
+                        // If the process has already exited
+
+                        LoggingAdapter::logOrDebug(
+                            LoggingAdapter::$logInfo,
+                            'info',
+                            'Checking pid: {pid} - result: {res} ',
+                            ['pid' => $pid, 'res' => $res]
+                        );
+                        if ($res == -1 || $res > 0) {
+                            echo "Unsetting $pid..." . PHP_EOL;
+                            LoggingAdapter::logOrDebug(
+                                LoggingAdapter::$logInfo,
+                                'info',
+                                'Unsetting pid: {pid}',
+                                ['pid' => $pid]
+                            );
+                            unset(self::$pidList[$key]);
+                        }
                     }
                 }
+
+                LoggingAdapter::logOrDebug(
+                    LoggingAdapter::$logInfo,
+                    'info',
+                    'Pid list length: ' . count(self::$pidList)
+                );
+
+                if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Continue...'
+                    );
+                    continue;
+                }
+
+                if (count(self::$pidList) === 0 && self::$redis->lLen('url') === 0) {
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Breaking...'
+                    );
+                    static::$parse = false;
+                }
+
+
+                $pid = pcntl_fork();
+
+
+                if ($pid == -1) {
+                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                        'error',
+                        'Error forking...'
+                    );
+                    exit();
+                } else if ($pid) {
+//                    PDOAdapter::forceCloseConnectionToDB();
+                    self::$pidList[] = $pid;
+
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Forking pid: {pid}',
+                        ['pid' => $pid]
+                    );
+                    // parent node
+
+                } else {
+                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                        'info',
+                        'Executing fork'
+                    );
+
+
+                    //
+                    self::$redis = new Redis();
+                    self::$redis->connect('redis-stack');
+                    $record = self::$redis->lPop('url');
+                    Parser::doJob($record);
+                    //
+                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                        'info',
+                        "Job done on pid: $pid"
+                    );
+                    break;
+
+                }
+//                    while(pcntl_waitpid(0, $status) != -1);
+
+
             }
+            exit();
 
         } catch (InvalidSelectorException $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
-                'error',
+                "error",
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -385,46 +321,18 @@ class Parser
     /**
      * Performing specific parse processes for intervals, questions and answers.
      *
-     * @param  Element  $anchor  DiDom\Document element with character
-     * @param  PDO  $db  DB connection to work with
+     * @param  string  $record  Redis queue record
      * @return  void
-     * @throws  InvalidSelectorException
      */
-    public static function doJob(Element $anchor, PDO $db): void
+    public static function doJob(string $record): void
     {
-        $character = $anchor->getAttribute('href');
-
-        $intervalsPage = Parser::createNewDocument($anchor->getAttribute('href'));
-
-        $listOfIntervals = Parser::parseArrayOfElementsFromDocument($intervalsPage, '.dnrg');
-
-        foreach ($listOfIntervals as $interval) {
-            $intervalName = $interval->getAttribute('href');
-            if (self::checkForDuplicateEntries(
-                'url_queue',
-                $_ENV['URL'] . $intervalName,
-                PDOAdapter::getUrlIdFromDB(
-                    $db,
-                    $_ENV['URL'] . $intervalName
-                ),
-                'url'
-            )
-            ) {
-                Parser::insertIntervalOfAnswers($db, $character, $interval);
-
-                $tableOfQuestions = Parser::createNewDocument($intervalName);
-                $arrayOfQuestions = Parser::makeArrayFromTable($tableOfQuestions, 'tbody');
-
-                foreach ($arrayOfQuestions as $link => $question) {
-                    $answerPage = Parser::createNewDocument($link);
-                    Parser::insertQuestionAndAnswer($db, $answerPage, $character, $intervalName);
-                }
-
-                PDOAdapter::insertUrlToDB(
-                    $db,
-                    $_ENV['URL'] . $intervalName
-                );
-            }
-        }
+        echo $record . PHP_EOL;
+        $array = explode('|', $record);
+        $url = $array[0];
+        $className = $array[1];
+        $parser = "App\classes\parsers\\$className";
+        $parser::parse($url);
     }
+
+
 }

@@ -2,6 +2,7 @@
 
 namespace App\classes;
 
+use App\classes\logging\LoggingAdapter;
 use PDO;
 use PDOException;
 
@@ -46,7 +47,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -54,17 +55,15 @@ class PDOAdapter
     /**
      * Creating a DB connection for child processes
      *
-     * @param  int  $forkNumber  number of child process in use
      * @return  PDO  instance of PDO DB connection
      */
-    public static function forceCreateConnectionToDB(int $forkNumber): PDO
+    public static function forceCreateConnectionToDB(): PDO
     {
         try {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Recreating child DB connection in "fork#{number}".',
-                ['number' => $forkNumber]
+                'Recreating child DB connection in fork.'
             );
             $db = new PDO('mysql:host=' . $_ENV['DB_HOST'] . ';dbname:' . $_ENV['DB_DATABASE'],
                 $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
@@ -73,8 +72,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Child DB connection in "fork#{number}" created.',
-                ['number' => $forkNumber]
+                'Child DB connection in fork created.'
             );
             return $db;
         } catch (PDOException $exception) {
@@ -82,7 +80,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -136,7 +134,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -171,7 +169,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -200,7 +198,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -229,7 +227,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -258,7 +256,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -287,7 +285,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -335,7 +333,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -370,7 +368,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -406,7 +404,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -443,7 +441,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -478,7 +476,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }
@@ -552,7 +550,7 @@ class PDOAdapter
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
         }
     }

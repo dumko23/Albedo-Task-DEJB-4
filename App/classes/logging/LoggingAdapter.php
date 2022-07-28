@@ -1,6 +1,6 @@
 <?php
 
-namespace App\classes;
+namespace App\classes\logging;
 
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -16,8 +16,8 @@ class LoggingAdapter
     public static array $logMessages = [
         'onInsert' => 'Adding row to "{table}" table. Value "{field}": "{value}"...',
         'successInsert' => 'Successfully added to "{table}". Value "{field}": "{value}".',
-        'onError' => 'Got error with message "{message}" at line "{number}".',
-        'onPDOError' => 'Got PDO error with message "{message}" at line "{number}".',
+        'onError' => 'Got error with message "{message}" at line "{number}" in Class "{class}".',
+        'onPDOError' => 'Got PDO error with message "{message}" at line "{number}" in Class "{class}".',
         'onSelect' => 'Trying to get "{something}" = "{value}" from table "{table}"...',
         'onSelectAnswer' => 'Trying to get "answer" = "{answerValue}" with question_id = "{questionIdValue}" from table "{table}"...',
         'answerFound' => 'Field "answer" with values "{answerValue}" and "{questionIdValue}" is already exist in "{table}" table! Skipping insert...',

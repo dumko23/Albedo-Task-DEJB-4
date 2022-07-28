@@ -1,6 +1,6 @@
 <?php
 
-namespace App\classes;
+namespace App\classes\logging;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
@@ -29,6 +29,6 @@ class DebugLogger extends AbstractProcessingHandler
     {
         echo $record->formatted;
 
-        sleep(2);
+        sleep($_ENV['DEBUG_DELAY']);
     }
 }

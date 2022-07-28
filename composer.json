@@ -5,7 +5,9 @@
     "imangazaliev/didom": "^2.0",
     "ext-json": "*",
     "ext-pdo": "*",
-    "ext-pcntl": "*"
+    "ext-redis": "*",
+    "ext-pcntl": "*",
+    "ext-posix": "*"
   },
   "autoload": {
     "psr-4": {
