@@ -13,10 +13,16 @@ use RedisException;
 
 class AntwortParser implements ParserInterface
 {
-
-    public static function parse(string $url):void
+    /**
+     * @inheritDoc
+     *
+     * @param  string  $url  URL  of type "url-to-parse|ClassName"
+     * @return void
+     */
+    public static function parse(string $url): void
     {
         try {
+            // Receiving SIGTERM signal from parent process
             pcntl_async_signals(true);
 
             pcntl_signal(SIGTERM, function ($signal) use ($url) {
@@ -61,7 +67,6 @@ class AntwortParser implements ParserInterface
                 'info',
                 'Exiting fork process...',
             );
-//            exit();
             //
 
         } catch (InvalidSelectorException $exception) {
@@ -79,7 +84,15 @@ class AntwortParser implements ParserInterface
         }
     }
 
-    public static function prepareInsert(Document $questionPage){
+    /**
+     * Preparing answer record to insert by retrieving it and all necessary additional data from Answer page
+     *
+     * @param  Document  $questionPage  DiDom document to be parsed
+     * @return void
+     * @throws InvalidSelectorException
+     */
+    public static function prepareInsert(Document $questionPage): void
+    {
         $answers = $questionPage
             ->find('td.Answer');
         $question = $questionPage
@@ -111,9 +124,9 @@ class AntwortParser implements ParserInterface
     /**
      * Insert answer in MYSQL table
      *
-     * @param  PDO  $db  DB connection to work with DB
-     * @param  string  $answer  answer to insert
-     * @param  string  $question  question to search for question_id to create table reference
+     * @param  PDO  $db            DB connection to work with DB
+     * @param  string  $answer     answer to insert
+     * @param  string  $question   question to search for question_id to create table reference
      * @param  string  $character  letter to search for char_id to create table reference
      * @return  void
      */

@@ -12,10 +12,16 @@ use RedisException;
 
 class FrageParser implements ParserInterface
 {
-
+    /**
+     * @inheritDoc
+     *
+     * @param  string  $url  URL of type "url-to-parse|ClassName"
+     * @return void
+     */
     public static function parse(string $url): void
     {
         try {
+            // Receiving SIGTERM signal from parent process
             pcntl_async_signals(true);
 
             pcntl_signal(SIGTERM, function ($signal) use ($url) {
@@ -63,7 +69,6 @@ class FrageParser implements ParserInterface
                 'info',
                 'Exiting fork process...',
             );
-//            exit();
             //
         } catch (RedisException $exception2) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
@@ -76,7 +81,7 @@ class FrageParser implements ParserInterface
 
 
     /**
-     * Insert question and  answer in MYSQL table
+     * Inserts question and  answer in MYSQL table
      *
      * @param  string  $question
      * @param  string  $link
@@ -117,9 +122,9 @@ class FrageParser implements ParserInterface
     }
 
     /**
-     * Create an array with content "href" => "innerHTML" from DiDom\Document table
+     * Creates an array with content "href" => "innerHTML" from DiDom\Document table
      *
-     * @param  Document  $doc  table to create from
+     * @param  Document  $doc   table to create from
      * @param  string  $needle  needle to search in table
      * @return  array
      */

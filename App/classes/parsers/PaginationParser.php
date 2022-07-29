@@ -11,10 +11,16 @@ use RedisException;
 
 class PaginationParser implements ParserInterface
 {
-
+    /**
+     * @inheritDoc
+     *
+     * @param  string  $url  URL of type "url-to-parse|ClassName"
+     * @return void
+     */
     public static function parse(string $url): void
     {
         try {
+            // Receiving SIGTERM signal from parent process
             pcntl_async_signals(true);
 
             pcntl_signal(SIGTERM, function ($signal) use ($url) {
@@ -61,7 +67,6 @@ class PaginationParser implements ParserInterface
                 'info',
                 'Exiting fork process...',
             );
-//            exit();
             //
 
         } catch (RedisException $exception2) {

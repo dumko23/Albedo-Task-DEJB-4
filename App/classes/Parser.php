@@ -101,7 +101,7 @@ class Parser
     /**
      * Parse DiDom\Document to find a needle element
      *
-     * @param  Document  $doc  document where you're searching in
+     * @param  Document  $doc   document where you're searching in
      * @param  string  $needle  an element that you're searching for
      * @return  Element[]|\DOMElement[]|void
      */
@@ -127,10 +127,10 @@ class Parser
     /**
      * Processing $result parameter for duplicate entries of  given element (letter, interval or question)
      *
-     * @param  string  $tableName  table searched in
+     * @param  string  $tableName   table searched in
      * @param  string  $whereValue  element value searched for
-     * @param  array  $result  resulting array from search process
-     * @param  string  $field  element searched for (letter, interval or question)
+     * @param  array  $result       resulting array from search process
+     * @param  string  $field       element searched for (letter, interval or question)
      * @return  bool
      */
     public static function checkForDuplicateEntries(string $tableName, string $whereValue, array $result, string $field): bool
@@ -158,8 +158,10 @@ class Parser
     }
 
     /**
-     * Perform general parse process. Includes creating documents from given url, inserting characters to DB,
-     * checking for duplicates and performing multithreading processes
+     * Performing general parse process. Creates forked processes which calls special parsers specified
+     * in Redis queue records. Maximum of created forks can be adjusted in .env file. Forks count
+     * is checked in semi-infinite loop. Exits if there is no URL in Redis queue or on SIGTERM signal received,
+     * closing all forked threads
      *
      * @return  void
      * @throws RedisException
@@ -321,9 +323,9 @@ class Parser
     }
 
     /**
-     * Performing specific parse processes for intervals, questions and answers.
+     * Performing specific parse processes for intervals, questions and answers using ClassName specified in $record.
      *
-     * @param  string  $record  Redis queue record
+     * @param  string  $record  Redis queue record type of "url-to-parse|ClassName"
      * @return  void
      */
     public static function doJob(string $record): void
