@@ -7,7 +7,9 @@
     "ext-pdo": "*",
     "ext-redis": "*",
     "ext-pcntl": "*",
-    "ext-posix": "*"
+    "ext-posix": "*",
+    "pear/http_request2": "^2.5",
+    "guzzlehttp/guzzle": "^7.4"
   },
   "autoload": {
     "psr-4": {

@@ -7,7 +7,9 @@ use DiDom\Document;
 use DiDom\Element;
 use DiDom\Exceptions\InvalidSelectorException;
 use Exception;
-use PDO;
+use HTTP_Request2;
+use HTTP_Request2_Exception;
+use HTTP_Request2_LogicException;
 use Redis;
 use RedisException;
 
@@ -88,8 +90,33 @@ class Parser
             ['url' => $url]
         );
         try {
-            return new Document($url, true);
-        } catch (Exception $exception) {
+            $request = new HTTP_Request2($url, HTTP_Request2::METHOD_GET, [
+                'proxy' => $_ENV['PROXY'],
+                'ssl_verify_peer' => false,
+                'ssl_verify_host' => false,
+                'proxy_type' => 'http',
+                'buffer_size' => 50000
+            ]);
+//            $request->setConfig(array(
+//
+//            ));
+            $response = $request->send();
+            if (200 == $response->getStatus()) {
+                $body = $response->getBody();
+
+                $doc = new Document($body);
+//                print_r($doc);
+//                $result = $doc->loadHtml($body);
+                return $doc;
+//                exit;
+            } else {
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'info',
+                    'Unexpected HTTP status: {status} {reason}',
+                    ['status' => $response->getStatus(), 'reason' => $response->getReasonPhrase()]
+                );
+            }
+        } catch (HTTP_Request2_LogicException|HTTP_Request2_Exception|Exception $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
@@ -300,6 +327,7 @@ class Parser
                     self::$redis->connect('redis-stack');
                     $record = self::$redis->lPop('url');
 
+                    sleep(rand(1, 5));
                     Parser::doJob($record);
                     //
 
@@ -313,7 +341,7 @@ class Parser
             }
             exit();
 
-        } catch (InvalidSelectorException $exception) {
+        } catch (RedisException $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 "error",
                 LoggingAdapter::$logMessages['onError'],

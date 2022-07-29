@@ -57,9 +57,10 @@ class PaginationParser implements ParserInterface
             );
 
             //
+            echo $url . PHP_EOL;
             $doc = Parser::createNewDocument($url);
 
-            $arrayOfPagination = Parser::parseArrayOfElementsFromDocument($doc, '.dnrg');
+            $arrayOfPagination = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
             PaginationParser::insertIntervals($arrayOfPagination);
             PDOAdapter::forceCloseConnectionToDB();

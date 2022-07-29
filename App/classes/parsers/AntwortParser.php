@@ -55,7 +55,7 @@ class AntwortParser implements ParserInterface
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Searching for "{needle}"...',
-                ['needle' => '.dnrg']
+                ['needle' => 'td.Answer']
             );
 
             //
@@ -69,17 +69,11 @@ class AntwortParser implements ParserInterface
             );
             //
 
-        } catch (InvalidSelectorException $exception) {
+        } catch (InvalidSelectorException|RedisException $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
-            );
-        } catch (RedisException $e) {
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
-                'error',
-                LoggingAdapter::$logMessages['onError'],
-                ['message' => $e->getMessage(), 'number' => $e->getLine(), 'class' => self::class]
             );
         }
     }

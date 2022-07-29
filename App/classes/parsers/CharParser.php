@@ -60,7 +60,7 @@ class CharParser implements ParserInterface
             //
             $doc = Parser::createNewDocument($url);
 
-            $arrayOfAnchors = Parser::parseArrayOfElementsFromDocument($doc, '.dnrg');
+            $arrayOfAnchors = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
             self::insertCharactersFromAnchors($arrayOfAnchors);
             PDOAdapter::forceCloseConnectionToDB();
