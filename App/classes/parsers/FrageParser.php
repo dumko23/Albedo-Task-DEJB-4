@@ -32,7 +32,7 @@ class FrageParser implements ParserInterface
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
-                        'Returning URL: {url}...',
+                        'Returning URL: {url} in queue...',
                         ['url' => $url]
                     );
 
@@ -63,7 +63,7 @@ class FrageParser implements ParserInterface
                 'info',
                 'Exiting fork process...',
             );
-            exit();
+//            exit();
             //
         } catch (RedisException $exception2) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,

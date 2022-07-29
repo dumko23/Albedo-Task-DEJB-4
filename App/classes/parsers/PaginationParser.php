@@ -31,7 +31,7 @@ class PaginationParser implements ParserInterface
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
-                        'Returning URL: {url}...',
+                        'Returning URL: {url} in queue...',
                         ['url' => $url]
                     );
 
@@ -61,7 +61,7 @@ class PaginationParser implements ParserInterface
                 'info',
                 'Exiting fork process...',
             );
-            exit();
+//            exit();
             //
 
         } catch (RedisException $exception2) {

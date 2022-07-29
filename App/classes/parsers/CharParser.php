@@ -37,7 +37,7 @@ class CharParser implements ParserInterface
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
-                        'Returning URL: {url}...',
+                        'Returning URL: {url} in queue...',
                         ['url' => $url]
                     );
 
