@@ -16,15 +16,16 @@ class FrageParser implements ParserInterface
      * @inheritDoc
      *
      * @param  string  $url  URL of type "url-to-parse|ClassName"
+     * @param  string  $record  Redis record to send back in queue in specific case
      * @return void
      */
-    public static function parse(string $url): void
+    public static function parse(string $url, string $record): void
     {
         try {
             // Receiving SIGTERM signal from parent process
             pcntl_async_signals(true);
 
-            pcntl_signal(SIGTERM, function ($signal) use ($url) {
+            pcntl_signal(SIGTERM, function ($signal) use ($record) {
                 if ($signal === SIGTERM) {
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
@@ -33,13 +34,13 @@ class FrageParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
-                    Parser::$redis->rPush('url', $url);
+                    Parser::$redis->rPush('url', $record);
 
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
                         'Returning URL: {url} in queue...',
-                        ['url' => $url]
+                        ['url' => $record]
                     );
 
                     LoggingAdapter::logOrDebug(
@@ -53,11 +54,11 @@ class FrageParser implements ParserInterface
 
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
-                'Searching for "{needle}"...',
-                ['needle' => 'tbody']
+                'Searching for "{needle}" in {url}...',
+                ['needle' => 'tbody', 'url' => $url]
             );
             //
-            $tableOfQuestions = Parser::createNewDocument($url);
+            $tableOfQuestions = Parser::createNewDocument($url, $record);
 
             $arrayOfQuestions = self::makeArrayFromTable($tableOfQuestions, 'tbody');
 

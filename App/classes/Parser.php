@@ -82,7 +82,7 @@ class Parser
      * @param  string  $url  url to create from
      * @return  Document
      */
-    public static function createNewDocument(string $url = ''): Document
+    public static function createNewDocument(string $url, string $record): Document
     {
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
@@ -91,24 +91,14 @@ class Parser
         );
         try {
             $request = new HTTP_Request2($url, HTTP_Request2::METHOD_GET, [
-                'proxy' => $_ENV['PROXY'],
-                'ssl_verify_peer' => false,
-                'ssl_verify_host' => false,
-                'proxy_type' => 'http',
-                'buffer_size' => 50000
+                'proxy' => 'obfs4-bridge:9050',
             ]);
-//            $request->setConfig(array(
-//
-//            ));
             $response = $request->send();
             if (200 == $response->getStatus()) {
                 $body = $response->getBody();
 
                 $doc = new Document($body);
-//                print_r($doc);
-//                $result = $doc->loadHtml($body);
                 return $doc;
-//                exit;
             } else {
                 LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                     'info',
@@ -120,7 +110,17 @@ class Parser
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => $exception->getErrorClass()]
+            );
+            // Returning URL back to the queue
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
+
+            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                'info',
+                'Record {record} pushed back to the queue after an Error occurred.',
+                ['record' => $record]
             );
         }
     }
@@ -191,7 +191,6 @@ class Parser
      * closing all forked threads
      *
      * @return  void
-     * @throws RedisException
      */
     public static function doParse(): void
     {
@@ -255,7 +254,6 @@ class Parser
                         );
                         // Unsetting exited process from pidList
                         if ($res == -1 || $res > 0) {
-                            echo "Unsetting $pid..." . PHP_EOL;
                             LoggingAdapter::logOrDebug(
                                 LoggingAdapter::$logInfo,
                                 'info',
@@ -273,8 +271,15 @@ class Parser
                     'Pid list length: ' . count(self::$pidList)
                 );
 
-                // Skipping iteration if pidList is full
+                // Skipping iteration if pidList is full or queue is empty while pidList isn't
                 if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
+                    LoggingAdapter::logOrDebug(
+                        LoggingAdapter::$logInfo,
+                        'info',
+                        'Continue...'
+                    );
+                    continue;
+                } else if (count(self::$pidList) !== 0 && self::$redis->lLen('url') === 0) {
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
@@ -358,12 +363,16 @@ class Parser
      */
     public static function doJob(string $record): void
     {
-        echo $record . PHP_EOL;
+        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+            'info',
+            'Starting to process record: "{record}".',
+            ['record' => $record]
+        );
         $array = explode('|', $record);
         $url = $array[0];
         $className = $array[1];
         $parser = "App\classes\parsers\\$className";
-        $parser::parse($url);
+        $parser::parse($url, $record);
     }
 
 
