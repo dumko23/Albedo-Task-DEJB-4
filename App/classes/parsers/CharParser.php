@@ -64,7 +64,7 @@ class CharParser implements ParserInterface
             $arrayOfAnchors = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
             self::insertCharactersFromAnchors($arrayOfAnchors);
-            PDOAdapter::forceCloseConnectionToDB();
+
             //
 
         } catch (RedisException $exception2) {

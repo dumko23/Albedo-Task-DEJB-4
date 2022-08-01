@@ -62,8 +62,7 @@ class AntwortParser implements ParserInterface
             //
             $doc = Parser::createNewDocument($url, $record);
 
-            self::prepareInsert($doc);
-            PDOAdapter::forceCloseConnectionToDB();
+            self::prepareInsert($doc, $record);
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -83,10 +82,11 @@ class AntwortParser implements ParserInterface
      * Preparing answer record to insert by retrieving it and all necessary additional data from Answer page
      *
      * @param  Document  $questionPage  DiDom document to be parsed
+     * @param  string  $record
      * @return void
      * @throws InvalidSelectorException
      */
-    public static function prepareInsert(Document $questionPage): void
+    public static function prepareInsert(Document $questionPage, string $record): void
     {
         $answers = $questionPage
             ->find('td.Answer');
@@ -102,7 +102,7 @@ class AntwortParser implements ParserInterface
                     ->getNode()
                     ->textContent;
 
-                self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1));
+                self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1), $record);
             }
         } else {
             $answer = $answers[0]
@@ -110,7 +110,7 @@ class AntwortParser implements ParserInterface
                 ->getNode()
                 ->textContent;
 
-            self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1));
+            self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1), $record);
         }
 
     }
@@ -123,9 +123,10 @@ class AntwortParser implements ParserInterface
      * @param  string  $answer     answer to insert
      * @param  string  $question   question to search for question_id to create table reference
      * @param  string  $character  letter to search for char_id to create table reference
+     * @param  string  $record
      * @return  void
      */
-    public static function insertAnswer(PDO $db, string $answer, string $question, string $character): void
+    public static function insertAnswer(PDO $db, string $answer, string $question, string $character, string $record): void
     {
         if (
             PDOAdapter::checkAnswerInDB($db,
@@ -139,7 +140,8 @@ class AntwortParser implements ParserInterface
                 ),
                 $answer,
                 strlen($answer),
-                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id'])
+                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
+                $record
             );
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,

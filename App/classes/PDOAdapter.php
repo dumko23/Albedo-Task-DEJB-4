@@ -5,6 +5,8 @@ namespace App\classes;
 use App\classes\logging\LoggingAdapter;
 use PDO;
 use PDOException;
+use Redis;
+use RedisException;
 
 class PDOAdapter
 {
@@ -97,8 +99,10 @@ class PDOAdapter
             'info',
             'Closing parent DB connection.'
         );
-
-        self::$db = null;
+        if (!is_null(self::$db)){
+            self::$db->query('KILL CONNECTION_ID()');
+            self::$db = null;
+        }
         LoggingAdapter::logOrDebug(
             LoggingAdapter::$logInfo,
             'info',
@@ -281,9 +285,11 @@ class PDOAdapter
      * @param  PDO  $dbConnection      instance of PDO DB connection
      * @param  int  $char_id           char_id to bind interval to
      * @param  string  $interval_name  interval_name to insert
+     * @param  string  $record
      * @return  void
+     * @throws RedisException
      */
-    public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name): void
+    public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name, string $record): void
     {
         try {
             LoggingAdapter::logOrDebug(
@@ -307,6 +313,15 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onPDOError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'notice',
+                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                ['value' => $interval_name]
+            );
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
         }
     }
 
@@ -317,9 +332,11 @@ class PDOAdapter
      * @param  int  $char_id       char_id to bind question to
      * @param  int  $interval_id   interval_id to bind question to
      * @param  string  $question   question to insert into DB table
+     * @param  string  $record
      * @return  void
+     * @throws RedisException
      */
-    public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question): void
+    public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question, string $record): void
     {
         try {
             LoggingAdapter::logOrDebug(
@@ -343,6 +360,15 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onPDOError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'notice',
+                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                ['value' => $question]
+            );
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
         }
     }
 
@@ -354,9 +380,11 @@ class PDOAdapter
      * @param  string  $answer     answer to insert
      * @param  int  $length        inserted answer length
      * @param  int  $char_id       char_id to bind answer with
+     * @param  string  $record
      * @return  void
+     * @throws RedisException
      */
-    public static function insertAnswerToDB(PDO $dbConnection, int $question_id, string $answer, int $length, int $char_id): void
+    public static function insertAnswerToDB(PDO $dbConnection, int $question_id, string $answer, int $length, int $char_id, string $record): void
     {
         try {
             LoggingAdapter::logOrDebug(
@@ -380,6 +408,15 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onPDOError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'notice',
+                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                ['value' => $answer]
+            );
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
         }
     }
 
@@ -397,6 +434,9 @@ class PDOAdapter
                 'Dropping existing tables in parser_data DB.'
             );
             static::db()->prepare('SET foreign_key_checks = 0')->execute();
+            static::db()->prepare('SET GLOBAL connect_timeout = 60')->execute();
+            static::db()->prepare('SET GLOBAL interactive_timeout = 60')->execute();
+            static::db()->prepare('SET GLOBAL wait_timeout = 60')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.character_table')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.char_interval')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.questions')->execute();

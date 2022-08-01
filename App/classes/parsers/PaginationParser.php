@@ -62,8 +62,7 @@ class PaginationParser implements ParserInterface
 
             $arrayOfPagination = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
-            PaginationParser::insertIntervals($arrayOfPagination);
-            PDOAdapter::forceCloseConnectionToDB();
+            PaginationParser::insertIntervals($arrayOfPagination, $record);
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -83,10 +82,11 @@ class PaginationParser implements ParserInterface
      * Insert intervals to table from an array of DiDom\Document anchor elements
      *
      * @param  array  $listOfIntervals  an array of elements
+     * @param  string  $record
      * @return  void
      * @throws RedisException
      */
-    private static function insertIntervals(array $listOfIntervals): void
+    private static function insertIntervals(array $listOfIntervals, string $record): void
     {
         $db = PDOAdapter::forceCreateConnectionToDB();
         foreach ($listOfIntervals as $interval) {
@@ -106,6 +106,7 @@ class PaginationParser implements ParserInterface
                         substr($intervalName, 0, 1)
                     )[0]['char_id']),
                     $intervalName,
+                    $record
                 );
             } else {
                 LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,

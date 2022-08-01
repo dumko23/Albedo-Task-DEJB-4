@@ -63,9 +63,9 @@ class FrageParser implements ParserInterface
             $arrayOfQuestions = self::makeArrayFromTable($tableOfQuestions, 'tbody');
 
             foreach ($arrayOfQuestions as $link => $question) {
-                self::insertQuestionToDB($question, $link, $url);
+                self::insertQuestionToDB($question, $link, $url, $record);
             }
-            PDOAdapter::forceCloseConnectionToDB();
+//            PDOAdapter::forceCloseConnectionToDB();
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -87,10 +87,11 @@ class FrageParser implements ParserInterface
      * @param  string  $question
      * @param  string  $link
      * @param  string  $url
+     * @param  string  $record
      * @return  void
      * @throws RedisException
      */
-    public static function insertQuestionToDB(string $question, string $link, string $url): void
+    public static function insertQuestionToDB(string $question, string $link, string $url, string $record): void
     {
         $db = PDOAdapter::forceCreateConnectionToDB();
         $array = explode('/', $url);
@@ -108,7 +109,8 @@ class FrageParser implements ParserInterface
             PDOAdapter::insertQuestionToDB($db,
                 intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1))[0]['char_id']),
                 intval(PDOAdapter::getIntervalIdFromDB($db, $array[count($array) - 1])[0]['interval_id']),
-                $question
+                $question,
+                $record
             );
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
