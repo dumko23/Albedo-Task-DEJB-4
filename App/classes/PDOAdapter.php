@@ -316,7 +316,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'notice',
-                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                'An PDO Error occurred while inserting "{value}. Pushing back to queue"',
                 ['value' => $interval_name]
             );
             Parser::$redis = new Redis();
@@ -363,7 +363,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'notice',
-                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                'An PDO Error occurred while inserting "{value}. Pushing back to queue"',
                 ['value' => $question]
             );
             Parser::$redis = new Redis();
@@ -411,7 +411,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'notice',
-                'An Error occurred while inserting "{value}. Pushing back to queue"',
+                'An PDO Error occurred while inserting "{value}. Pushing back to queue"',
                 ['value' => $answer]
             );
             Parser::$redis = new Redis();

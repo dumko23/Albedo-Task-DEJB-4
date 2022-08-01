@@ -8,6 +8,7 @@ use App\classes\PDOAdapter;
 use DiDom\Document;
 use DiDom\Exceptions\InvalidSelectorException;
 use PDO;
+use PDOException;
 use Redis;
 use RedisException;
 
@@ -69,12 +70,21 @@ class AntwortParser implements ParserInterface
             );
             //
 
-        } catch (InvalidSelectorException|RedisException $exception) {
+        } catch (InvalidSelectorException|RedisException|PDOException $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'notice',
+                'An PDO Error occurred while processing "{value}. Pushing back to queue"',
+                ['value' => $record]
+            );
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
         }
     }
 
