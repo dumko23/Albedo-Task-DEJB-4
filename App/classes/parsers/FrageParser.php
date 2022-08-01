@@ -134,7 +134,7 @@ class FrageParser implements ParserInterface
         $result = Parser::parseArrayOfElementsFromDocument($doc, $needle);
         $resultArray = [];
         for ($i = 0; $i < count($result); $i = $i + 2) {
-            $resultArray[$result[$i]->getAttribute('href')] = $result[$i + 1]->innerHtml();
+            $resultArray[$result[$i]->getAttribute('href')] = $result[$i]->innerHtml();
         }
         return $resultArray;
     }

@@ -8,7 +8,7 @@ use PDOException;
 
 class PDOAdapter
 {
-    private static PDO|null $db;
+    private static PDO|null $db = null;
 
     /**
      * DB connection used by parent before forking
@@ -97,6 +97,7 @@ class PDOAdapter
             'info',
             'Closing parent DB connection.'
         );
+
         self::$db = null;
         LoggingAdapter::logOrDebug(
             LoggingAdapter::$logInfo,

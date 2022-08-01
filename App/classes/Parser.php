@@ -344,6 +344,12 @@ class Parser
                     exit();
                 }
             }
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Parse done.'
+            );
+
             exit();
 
         } catch (RedisException $exception) {
