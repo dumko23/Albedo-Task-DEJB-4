@@ -31,7 +31,7 @@ class PDOAdapter
                     'info',
                     'Connection is not set. Creating initial connection...');
 
-                self::$db = new PDO('mysql:host=' . $_ENV['DB_HOST'] . ';dbname:' . $_ENV['DB_DATABASE'],
+                self::$db = new PDO("mysql:host=" . $_ENV['DB_HOST'] . ";dbname:" . $_ENV['DB_DATABASE'],
                     $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
                         PDO::ATTR_DEFAULT_FETCH_MODE => 2
                     ]);
