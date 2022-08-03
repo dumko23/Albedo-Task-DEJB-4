@@ -34,7 +34,7 @@ class CharParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
-                    Parser::$redis->rPush('url', $record);
+                    Parser::$redis->lPush('url', $record);
 
 
                     LoggingAdapter::logOrDebug(
@@ -82,7 +82,7 @@ class CharParser implements ParserInterface
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->rPush('url', $record);
+            Parser::$redis->lPush('url', $record);
         }
     }
 
