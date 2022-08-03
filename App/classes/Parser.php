@@ -246,12 +246,6 @@ class Parser
                     foreach (self::$pidList as $key => $pid) {
                         $res = pcntl_waitpid($pid, $status, WNOHANG);
                         // If the process has already exited
-                        LoggingAdapter::logOrDebug(
-                            LoggingAdapter::$logInfo,
-                            'info',
-                            'Checking pid: {pid} - result: {res} ',
-                            ['pid' => $pid, 'res' => $res]
-                        );
                         // Unsetting exited process from pidList
                         if ($res == -1 || $res > 0) {
                             LoggingAdapter::logOrDebug(
@@ -265,26 +259,10 @@ class Parser
                     }
                 }
 
-                LoggingAdapter::logOrDebug(
-                    LoggingAdapter::$logInfo,
-                    'info',
-                    'Pid list length: ' . count(self::$pidList)
-                );
-
                 // Skipping iteration if pidList is full or queue is empty while pidList isn't
                 if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
-                    LoggingAdapter::logOrDebug(
-                        LoggingAdapter::$logInfo,
-                        'info',
-                        'Continue...'
-                    );
                     continue;
                 } else if (count(self::$pidList) !== 0 && self::$redis->lLen('url') === 0) {
-                    LoggingAdapter::logOrDebug(
-                        LoggingAdapter::$logInfo,
-                        'info',
-                        'Continue...'
-                    );
                     continue;
                 }
 
