@@ -6,7 +6,6 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./:/usr/src/myapp
-      - ./logs:/usr/src/myapp/logs
     depends_on:
       - mysql
   mysql:
