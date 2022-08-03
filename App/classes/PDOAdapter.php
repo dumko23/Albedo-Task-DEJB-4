@@ -442,6 +442,9 @@ class PDOAdapter
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.questions')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.answers')->execute();
             static::db()->prepare('SET foreign_key_checks = 1')->execute();
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->del('url');
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
