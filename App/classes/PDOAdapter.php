@@ -252,7 +252,7 @@ class PDOAdapter
             $queryGet = $dbConnection->prepare('select answer_id from parser_data.answers where (answer = ? and question_id = ?)');
             $queryGet->execute(["$whereValue1", $whereValue2]);
             $result = $queryGet->fetchAll();
-            if (isset($result[0])) {
+            if (!isset($result[0])) {
                 LoggingAdapter::logOrDebug(
                     LoggingAdapter::$logInfo,
                     'info',
