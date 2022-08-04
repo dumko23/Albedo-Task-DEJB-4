@@ -139,7 +139,7 @@ class AntwortParser implements ParserInterface
     public static function insertAnswer(PDO $db, string $answer, string $question, string $character, string $record): void
     {
         if (
-            PDOAdapter::checkAnswerInDB($db,
+            !PDOAdapter::checkAnswerInDB($db,
                 $answer,
                 intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']
                 )
