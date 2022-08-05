@@ -41,9 +41,11 @@ class LoggingAdapter
         $output = "%datetime% > %channel%.%level_name% > %message%\n";
         $formatter = new LineFormatter($output, $dateFormat);
 
-        $infoStream = new StreamHandler(__DIR__ . '/logs/log_file_' . date('Y-m-d_H-i-s') . '.log', Level::Info);
+        $logFile = '/logs/log_file_' . date('Y-m-d_H-i-s') . '.log';
+
+        $infoStream = new StreamHandler(__DIR__ . $logFile, Level::Info);
         $infoStream->setFormatter($formatter);
-        $errorStream = new StreamHandler(__DIR__ . '/logs/log_file_' . date('Y-m-d_H-i-s') . '.log', Level::Error);
+        $errorStream = new StreamHandler(__DIR__ . $logFile, Level::Error);
         $errorStream->setFormatter($formatter);
         $debugStream = new DebugLogger();
         $debugStream->setFormatter($formatter);
