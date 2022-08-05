@@ -102,6 +102,7 @@ class FrageParser implements ParserInterface
     public static function insertQuestionToDB(string $question, string $link, string $record): void
     {
         $db = PDOAdapter::forceCreateConnectionToDB();
+        $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1))[0]['char_id']);
 
         if (
             Parser::checkForDuplicateEntries(
@@ -115,7 +116,7 @@ class FrageParser implements ParserInterface
             )
         ) {
             PDOAdapter::insertQuestionToDB($db,
-                intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1))[0]['char_id']),
+                $char_id,
                 $question,
                 $record
             );

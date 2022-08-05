@@ -139,22 +139,22 @@ class AntwortParser implements ParserInterface
      */
     public static function insertAnswer(PDO $db, string $answer, string $question, string $character, string $record): void
     {
+        $question_id = intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']);
+        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']);
+
         if (
             PDOAdapter::checkAnswerInDB($db,
                 $answer,
-                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']
-                )
+                $question_id
             ) === false
         ) {
-            $question_id = intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']);
-            $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']);
 
             if($question_id == 0){
-                PDOAdapter::insertQuestionToDB($db,
-                    intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
-                    $question,
-                    $record
-                );
+
+                Parser::$redis = new Redis();
+                Parser::$redis->connect('redis-stack');
+                Parser::$redis->rPush('url', $record);
+
             }
 
             PDOAdapter::insertAnswerToDB($db,
@@ -164,6 +164,7 @@ class AntwortParser implements ParserInterface
                 $char_id,
                 $record
             );
+
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
