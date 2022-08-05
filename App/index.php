@@ -14,5 +14,6 @@ $dotenv->load();
 
 Parser::initializeParser();
 
-Parser::doParse();
-
+if($_ENV['FRESH_PARSE'] === 'false') {
+    Parser::doParse();
+}
