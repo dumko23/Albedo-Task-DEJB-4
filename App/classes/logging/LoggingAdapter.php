@@ -2,6 +2,7 @@
 
 namespace App\classes\logging;
 
+use DateTimeZone;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
@@ -35,13 +36,14 @@ class LoggingAdapter
      */
     public static function initializeLogger(): void
     {
+        date_default_timezone_set('Europe/Kiev');
         $dateFormat = "Y-m-d H:i:s";
         $output = "%datetime% > %channel%.%level_name% > %message%\n";
         $formatter = new LineFormatter($output, $dateFormat);
 
-        $infoStream = new StreamHandler(__DIR__ . '/logs/log_file.log', Level::Info);
+        $infoStream = new StreamHandler(__DIR__ . '/logs/log_file_' . date('Y-m-d_H-i-s') . '.log', Level::Info);
         $infoStream->setFormatter($formatter);
-        $errorStream = new StreamHandler(__DIR__ . '/logs/log_file.log', Level::Error);
+        $errorStream = new StreamHandler(__DIR__ . '/logs/log_file_' . date('Y-m-d_H-i-s') . '.log', Level::Error);
         $errorStream->setFormatter($formatter);
         $debugStream = new DebugLogger();
         $debugStream->setFormatter($formatter);
@@ -49,14 +51,17 @@ class LoggingAdapter
         static::$logInfo = new Logger('parser_info');
         static::$logInfo->pushHandler($infoStream);
         static::$logInfo->pushProcessor(new PsrLogMessageProcessor());
+        static::$logInfo->setTimezone(new DateTimeZone('Europe/Kiev'));
 
         static::$logError = new Logger('parser_errors');
         static::$logError->pushHandler($errorStream);
         static::$logError->pushProcessor(new PsrLogMessageProcessor());
+        static::$logError->setTimezone(new DateTimeZone('Europe/Kiev'));
 
         static::$debugLogger = new Logger('parser_debug');
         static::$debugLogger->pushHandler($debugStream);
         static::$debugLogger->pushProcessor(new PsrLogMessageProcessor());
+        static::$debugLogger->setTimezone(new DateTimeZone('Europe/Kiev'));
 
         static::logOrDebug(static::$logInfo, 'info', 'Initializing logger');
     }
