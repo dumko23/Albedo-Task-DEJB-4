@@ -79,7 +79,7 @@ class AntwortParser implements ParserInterface
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'notice',
-                'An PDO Error occurred while processing "{value}. Pushing back to queue"',
+                'An PDO Error occurred while processing "{value}". Pushing back to queue',
                 ['value' => $record]
             );
             Parser::$redis = new Redis();
@@ -135,6 +135,7 @@ class AntwortParser implements ParserInterface
      * @param  string  $character  letter to search for char_id to create table reference
      * @param  string  $record
      * @return  void
+     * @throws RedisException
      */
     public static function insertAnswer(PDO $db, string $answer, string $question, string $character, string $record): void
     {
@@ -145,12 +146,22 @@ class AntwortParser implements ParserInterface
                 )
             ) === false
         ) {
+            $question_id = intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']);
+            $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']);
+
+            if($question_id == 0){
+                PDOAdapter::insertQuestionToDB($db,
+                    intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
+                    $question,
+                    $record
+                );
+            }
+
             PDOAdapter::insertAnswerToDB($db,
-                intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']
-                ),
+                $question_id,
                 $answer,
                 strlen($answer),
-                intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']),
+                $char_id,
                 $record
             );
         } else {
