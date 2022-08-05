@@ -27,6 +27,12 @@ DEBUG_DELAY=1
 ```
 
 
+FRESH_PARSE - when set to 'true' - creates fresh tables (BE CAREFUL: it'll drop tables if already exists); when set to 'false' - doing parse processes.
+```
+FRESH_PARSE=true
+```
+
+
 In Parser class in ```initialize``` method declaration uncomment ```dropNCreate``` line to drop (if exists) and create (if not exists) appropriate project tables
 ```
 //        Parser::dropNCreate(); // To initialize fresh tables
