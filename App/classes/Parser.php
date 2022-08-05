@@ -10,6 +10,7 @@ use Exception;
 use HTTP_Request2;
 use HTTP_Request2_Exception;
 use HTTP_Request2_LogicException;
+use PDOException;
 use Redis;
 use RedisException;
 
@@ -53,8 +54,16 @@ class Parser
             if (self::$redis->lLen('url') === 0) {
                 self::$redis->rPush('url', $_ENV['URL'] . '|CharParser');
             }
+            if($_ENV['FRESH_PARSE'] === 'true'){
+                Parser::dropNCreate(); // To initialize fresh tables
+                LoggingAdapter::logOrDebug(
+                    LoggingAdapter::$logInfo,
+                    'info',
+                    'Parse done.'
+                );
+            }
 
-        } catch (RedisException $exception) {
+        } catch (RedisException|Exception|PDOException $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
@@ -62,7 +71,6 @@ class Parser
             );
         }
 
-//        Parser::dropNCreate(); // To initialize fresh tables
     }
 
     /**

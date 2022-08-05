@@ -98,33 +98,9 @@ class PaginationParser implements ParserInterface
      */
     private static function insertIntervals(array $listOfIntervals, string $record): void
     {
-        $db = PDOAdapter::forceCreateConnectionToDB();
         foreach ($listOfIntervals as $interval) {
             $intervalName = $interval->getAttribute('href');
 
-            if (
-                Parser::checkForDuplicateEntries(
-                    'interval_id',
-                    $intervalName,
-                    PDOAdapter::getIntervalIdFromDB($db, $intervalName),
-                    'interval_name'
-                )
-            ) {
-                PDOAdapter::insertIntervalToDB($db,
-                    intval(PDOAdapter::getCharIdFromDB(
-                        $db,
-                        substr($intervalName, 0, 1)
-                    )[0]['char_id']),
-                    $intervalName,
-                    $record
-                );
-            } else {
-                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                    'info',
-                    LoggingAdapter::$logMessages['onSkip'],
-                    ['field' => 'interval', 'value' => $intervalName]
-                );
-            }
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->rPush('url', $_ENV['URL'] . $intervalName . '|FrageParser');

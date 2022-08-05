@@ -3,6 +3,7 @@
 namespace App\classes;
 
 use App\classes\logging\LoggingAdapter;
+use Exception;
 use PDO;
 use PDOException;
 use Redis;
@@ -44,7 +45,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo, 'info', 'Success.');
             return self::$db;
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -77,7 +78,7 @@ class PDOAdapter
                 'Child DB connection in fork created.'
             );
             return $db;
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -134,7 +135,7 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['successInsert'],
                 ['table' => 'character_table', 'field' => 'letter', 'value' => $char]
             );
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -163,36 +164,7 @@ class PDOAdapter
             $queryGet = $dbConnection->prepare('select char_id from parser_data.character_table where letter = ?');
             $queryGet->execute(["$char"]);
             return $queryGet->fetchAll();
-        } catch (PDOException $exception) {
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logError,
-                'error',
-                LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
-            );
-        }
-    }
-
-    /**
-     * Getting interval_id from DB by passing interval name (e.g. a-200) to the "where" clause
-     *
-     * @param  PDO  $dbConnection  instance of PDO DB connection
-     * @param  string  $interval   interval name to search in DB table
-     * @return  bool|array
-     */
-    public static function getIntervalIdFromDB(PDO $dbConnection, string $interval): bool|array
-    {
-        try {
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['onSelect'],
-                ['table' => 'char_interval', 'something' => 'interval_id', 'value' => $interval]
-            );
-            $queryGet = $dbConnection->prepare('select interval_id from parser_data.char_interval where interval_name = ?');
-            $queryGet->execute(["$interval"]);
-            return $queryGet->fetchAll();
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -221,7 +193,7 @@ class PDOAdapter
             $queryGet = $dbConnection->prepare('select question_id from parser_data.questions where question = ?');
             $queryGet->execute(["$question"]);
             return $queryGet->fetchAll();
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -269,59 +241,13 @@ class PDOAdapter
                 );
                 return true;
             }
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onPDOError'],
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
             );
-        }
-    }
-
-    /**
-     * Insert interval into DB table
-     *
-     * @param  PDO  $dbConnection      instance of PDO DB connection
-     * @param  int  $char_id           char_id to bind interval to
-     * @param  string  $interval_name  interval_name to insert
-     * @param  string  $record
-     * @return  void
-     * @throws RedisException
-     */
-    public static function insertIntervalToDB(PDO $dbConnection, int $char_id, string $interval_name, string $record): void
-    {
-        try {
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['onInsert'],
-                ['table' => 'char_interval', 'field' => 'interval_name', 'value' => $interval_name]
-            );
-            $dbConnection->prepare("insert into parser_data.char_interval (`char_id`, `interval_name`)
-                                values (?, ?)")->execute([$char_id, $interval_name]);
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logInfo,
-                'info',
-                LoggingAdapter::$logMessages['successInsert'],
-                ['table' => 'char_interval', 'field' => 'interval_name', 'value' => $interval_name]
-            );
-        } catch (PDOException $exception) {
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logError,
-                'error',
-                LoggingAdapter::$logMessages['onPDOError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
-            );
-            LoggingAdapter::logOrDebug(
-                LoggingAdapter::$logInfo,
-                'notice',
-                'An PDO Error occurred while inserting "{value}. Pushing back to queue"',
-                ['value' => $interval_name]
-            );
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            Parser::$redis->rPush('url', $record);
         }
     }
 
@@ -330,13 +256,12 @@ class PDOAdapter
      *
      * @param  PDO  $dbConnection  instance of PDO DB connection
      * @param  int  $char_id       char_id to bind question to
-     * @param  int  $interval_id   interval_id to bind question to
      * @param  string  $question   question to insert into DB table
      * @param  string  $record
      * @return  void
      * @throws RedisException
      */
-    public static function insertQuestionToDB(PDO $dbConnection, int $char_id, int $interval_id, string $question, string $record): void
+    public static function insertQuestionToDB(PDO $dbConnection, int $char_id, string $question, string $record): void
     {
         try {
             LoggingAdapter::logOrDebug(
@@ -345,15 +270,15 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onInsert'],
                 ['table' => 'questions', 'field' => 'question', 'value' => $question]
             );
-            $dbConnection->prepare("insert into parser_data.questions (`char_id`, `interval_id`, `question`)
-                                values (?, ?, ?)")->execute([$char_id, $interval_id, $question]);
+            $dbConnection->prepare("insert into parser_data.questions (`char_id`, `question`)
+                                values (?, ?)")->execute([$char_id,  $question]);
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
                 LoggingAdapter::$logMessages['successInsert'],
                 ['table' => 'questions', 'field' => 'question', 'value' => $question]
             );
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -401,7 +326,7 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['successInsert'],
                 ['table' => 'answers', 'field' => 'answer', 'value' => $answer]
             );
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -438,7 +363,6 @@ class PDOAdapter
             static::db()->prepare('SET GLOBAL interactive_timeout = 60')->execute();
             static::db()->prepare('SET GLOBAL wait_timeout = 60')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.character_table')->execute();
-            static::db()->prepare('DROP TABLE IF EXISTS parser_data.char_interval')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.questions')->execute();
             static::db()->prepare('DROP TABLE IF EXISTS parser_data.answers')->execute();
             static::db()->prepare('SET foreign_key_checks = 1')->execute();
@@ -450,7 +374,7 @@ class PDOAdapter
                 'info',
                 'Dropped successfully.'
             );
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
@@ -480,22 +404,12 @@ class PDOAdapter
                                         PRIMARY KEY(char_id)
                             )
                         ')->execute();
-            static::db()->prepare(
-                'CREATE TABLE IF NOT EXISTS parser_data.char_interval (
-                                        interval_id int(15) auto_increment NOT NULL ,
-                                        interval_name varchar(15) unique not null,
-                                        char_id int,
-                                        FOREIGN KEY (char_id) references parser_data.character_table(char_id) ON DELETE CASCADE,
-                                        PRIMARY KEY(interval_id)
-                            )
-                        ')->execute();
             static::db()->query(
                 'CREATE TABLE IF NOT EXISTS parser_data.questions (
                                         question_id int(15)  auto_increment NOT NULL,
                                         question varchar(255) not null,
                                         char_id int,
                                         interval_id int,
-                                        FOREIGN KEY (interval_id) references parser_data.char_interval(interval_id) ON DELETE CASCADE,
                                         FOREIGN KEY (char_id) references parser_data.character_table(char_id) ON DELETE CASCADE,
                                         PRIMARY KEY(question_id)
                             )
@@ -517,7 +431,7 @@ class PDOAdapter
                 'info',
                 'Created successfully.'
             );
-        } catch (PDOException $exception) {
+        } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
                 'error',
