@@ -127,12 +127,12 @@ class FrageParser implements ParserInterface
             );
         }
 
-        $question_id = PDOAdapter::getQuestionIdFromDB(PDOAdapter::forceCreateConnectionToDB(), $question);
+        $question_id = PDOAdapter::getQuestionIdFromDB($db, $question);
 
 
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');
-        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser|' . $question_id);
+        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser|' . $question_id . '|' . substr(strtolower($question), 0, 1));
     }
 
     /**

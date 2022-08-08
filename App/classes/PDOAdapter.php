@@ -126,6 +126,7 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onInsert'],
                 ['table' => 'character_table', 'field' => 'letter', 'value' => $char]
             );
+
             static::db()->prepare('insert into parser_data.character_table (letter)
                                 values (?)')->execute(["$char"]);
 
@@ -161,9 +162,11 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onSelect'],
                 ['table' => 'character_table', 'something' => 'letter', 'value' => $char]
             );
+
             $queryGet = $dbConnection->prepare('select char_id from parser_data.character_table where letter = ?');
             $queryGet->execute(["$char"]);
             return $queryGet->fetchColumn();
+
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
@@ -190,9 +193,11 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onSelect'],
                 ['table' => 'questions', 'something' => 'question_id', 'value' => $question]
             );
+
             $queryGet = $dbConnection->prepare('select question_id from parser_data.questions where question = ?');
             $queryGet->execute(["$question"]);
             return $queryGet->fetchColumn();
+
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
@@ -221,9 +226,11 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onSelectAnswer'],
                 ['table' => 'answers', 'answerValue' => $whereValue1, 'questionIdValue' => $whereValue2]
             );
+
             $queryGet = $dbConnection->prepare('select answer_id from parser_data.answers where (answer = ? and question_id = ?)');
             $queryGet->execute(["$whereValue1", $whereValue2]);
             $result = $queryGet->fetchColumn();
+
             if ($result === false) {
                 LoggingAdapter::logOrDebug(
                     LoggingAdapter::$logInfo,
@@ -270,8 +277,10 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onInsert'],
                 ['table' => 'questions', 'field' => 'question', 'value' => $question]
             );
+
             $dbConnection->prepare("insert into parser_data.questions (`char_id`, `question`)
                                 values (?, ?)")->execute([$char_id,  $question]);
+
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
@@ -318,8 +327,10 @@ class PDOAdapter
                 LoggingAdapter::$logMessages['onInsert'],
                 ['table' => 'answers', 'field' => 'answer', 'value' => $answer]
             );
+
             $dbConnection->prepare("insert into parser_data.answers (`question_id`, `answer`, `length`, `char_id`)
                                 values (?, ?, ?, ?)")->execute([$question_id, $answer, $length, $char_id]);
+
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',

@@ -97,13 +97,11 @@ class AntwortParser implements ParserInterface
      * @return void
      * @throws InvalidSelectorException|RedisException
      */
-    public static function prepareInsert(Document $questionPage, string $record): void
+    public static function prepareInsert(Document $questionPage, string $record, string $char): void
     {
         $answers = $questionPage
             ->find('td.Answer');
-        $question = $questionPage
-            ->find('#HeaderString')[0]
-            ->innerHtml();
+
         $db = PDOAdapter::forceCreateConnectionToDB();
         if (count($answers) > 1) {
             for ($i = 0; $i < count($answers); $i++) {
@@ -113,7 +111,7 @@ class AntwortParser implements ParserInterface
                     ->getNode()
                     ->textContent;
 
-                self::insertAnswer($db, $answer, substr(strtolower($question), 0, 1), $record);
+                self::insertAnswer($db, $answer, $record);
             }
         } else {
             $answer = $answers[0]
@@ -121,7 +119,7 @@ class AntwortParser implements ParserInterface
                 ->getNode()
                 ->textContent;
 
-            self::insertAnswer($db, $answer, substr(strtolower($question), 0, 1), $record);
+            self::insertAnswer($db, $answer, $record);
         }
 
     }
@@ -137,14 +135,15 @@ class AntwortParser implements ParserInterface
      * @return  void
      * @throws RedisException
      */
-    public static function insertAnswer(PDO $db, string $answer, string $character, string $record): void
+    public static function insertAnswer(PDO $db, string $answer, string $record): void
     {
         $array = explode('|', $record);
 
-        $question_id = end($array);
-        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character));
-        if ($question_id === false) {
+        $question_id = $array[2];
+        $char = $array[3];
+        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $char));
 
+        if (!$question_id) {
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->rPush('url', $record);
