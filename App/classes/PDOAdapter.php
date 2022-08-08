@@ -63,28 +63,28 @@ class PDOAdapter
     public static function forceCreateConnectionToDB(): PDO
     {
         try {
-//            LoggingAdapter::logOrDebug(
-//                LoggingAdapter::$logInfo,
-//                'info',
-//                'Recreating child DB connection in fork.'
-//            );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Recreating child DB connection in fork.'
+            );
             $db = new PDO('mysql:host=' . $_ENV['DB_HOST'] . ';dbname:' . $_ENV['DB_DATABASE'],
                 $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
                     PDO::ATTR_DEFAULT_FETCH_MODE => 2
                 ]);
-//            LoggingAdapter::logOrDebug(
-//                LoggingAdapter::$logInfo,
-//                'info',
-//                'Child DB connection in fork created.'
-//            );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Child DB connection in fork created.'
+            );
             return $db;
         } catch (PDOException|Exception $exception) {
-//            LoggingAdapter::logOrDebug(
-//                LoggingAdapter::$logError,
-//                'error',
-//                LoggingAdapter::$logMessages['onPDOError'],
-//                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
-//            );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logError,
+                'error',
+                LoggingAdapter::$logMessages['onPDOError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+            );
         }
     }
 

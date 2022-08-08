@@ -121,7 +121,7 @@ class AntwortParser implements ParserInterface
                 ->getNode()
                 ->textContent;
 
-            self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1), $record);
+            self::insertAnswer($db, $answer, substr(strtolower($question), 0, 1), $record);
         }
 
     }
