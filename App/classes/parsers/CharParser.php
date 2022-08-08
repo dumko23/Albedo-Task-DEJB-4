@@ -102,7 +102,7 @@ class CharParser implements ParserInterface
                 if (
                     Parser::checkForDuplicateEntries(
                         'character_table',
-                        $anchor->getAttribute('href'),
+                        $character,
                         PDOAdapter::getCharIdFromDB($db, $character),
                         'letter'
                     )

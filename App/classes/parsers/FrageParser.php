@@ -19,6 +19,7 @@ class FrageParser implements ParserInterface
      * @param  string  $url     URL of type "url-to-parse|ClassName"
      * @param  string  $record  Redis record to send back in queue in specific case
      * @return void
+     * @throws RedisException
      */
     public static function parse(string $url, string $record): void
     {
@@ -66,7 +67,6 @@ class FrageParser implements ParserInterface
             foreach ($arrayOfQuestions as $link => $question) {
                 self::insertQuestionToDB($question, $link, $record);
             }
-            PDOAdapter::forceCloseConnectionToDB();
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -90,7 +90,6 @@ class FrageParser implements ParserInterface
         }
     }
 
-
     /**
      * Inserts question and  answer in MYSQL table
      *
@@ -106,15 +105,17 @@ class FrageParser implements ParserInterface
         $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1)));
 
         if (
-            Parser::checkForDuplicateEntries(
-                'questions',
-                $question,
-                PDOAdapter::getQuestionIdFromDB(
-                    $db,
-                    $question,
-                ),
-                'question')
-            === true
+//            Parser::checkForDuplicateEntries(
+//                'questions',
+//                $question,
+//                PDOAdapter::getQuestionIdFromDB(
+//                    $db,
+//                    $question,
+//                ),
+//                'question')
+
+        PDOAdapter::getQuestionIdFromDB($db, $question)
+            === false
         ) {
             PDOAdapter::insertQuestionToDB($db,
                 $char_id,

@@ -65,7 +65,6 @@ class AntwortParser implements ParserInterface
             $doc = Parser::createNewDocument($url, $record);
 
             self::prepareInsert($doc, $record);
-            PDOAdapter::forceCloseConnectionToDB();
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
