@@ -16,7 +16,7 @@ class FrageParser implements ParserInterface
     /**
      * @inheritDoc
      *
-     * @param  string  $url  URL of type "url-to-parse|ClassName"
+     * @param  string  $url     URL of type "url-to-parse|ClassName"
      * @param  string  $record  Redis record to send back in queue in specific case
      * @return void
      */
@@ -66,6 +66,7 @@ class FrageParser implements ParserInterface
             foreach ($arrayOfQuestions as $link => $question) {
                 self::insertQuestionToDB($question, $link, $record);
             }
+            PDOAdapter::forceCloseConnectionToDB();
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -102,7 +103,7 @@ class FrageParser implements ParserInterface
     public static function insertQuestionToDB(string $question, string $link, string $record): void
     {
         $db = PDOAdapter::forceCreateConnectionToDB();
-        $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1))[0]['char_id']);
+        $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1)));
 
         if (
             Parser::checkForDuplicateEntries(
@@ -112,8 +113,8 @@ class FrageParser implements ParserInterface
                     $db,
                     $question,
                 ),
-                'question'
-            )
+                'question')
+            === true
         ) {
             PDOAdapter::insertQuestionToDB($db,
                 $char_id,
@@ -127,9 +128,12 @@ class FrageParser implements ParserInterface
                 ['field' => 'question', 'value' => $question]
             );
         }
+
+        $question_id = PDOAdapter::getQuestionIdFromDB(PDOAdapter::forceCreateConnectionToDB(), $question);
+
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');
-        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser');
+        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser|' . $question_id);
     }
 
     /**

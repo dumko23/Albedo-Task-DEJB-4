@@ -17,9 +17,10 @@ class AntwortParser implements ParserInterface
     /**
      * @inheritDoc
      *
-     * @param  string  $url  URL  of type "url-to-parse|ClassName"
+     * @param  string  $url     URL  of type "url-to-parse|ClassName"
      * @param  string  $record  Redis record to send back in queue in specific case
      * @return void
+     * @throws RedisException
      */
     public static function parse(string $url, string $record): void
     {
@@ -64,6 +65,7 @@ class AntwortParser implements ParserInterface
             $doc = Parser::createNewDocument($url, $record);
 
             self::prepareInsert($doc, $record);
+            PDOAdapter::forceCloseConnectionToDB();
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -94,7 +96,7 @@ class AntwortParser implements ParserInterface
      * @param  Document  $questionPage  DiDom document to be parsed
      * @param  string  $record
      * @return void
-     * @throws InvalidSelectorException
+     * @throws InvalidSelectorException|RedisException
      */
     public static function prepareInsert(Document $questionPage, string $record): void
     {
@@ -112,7 +114,7 @@ class AntwortParser implements ParserInterface
                     ->getNode()
                     ->textContent;
 
-                self::insertAnswer($db, $answer, $question, substr(strtolower($question), 0, 1), $record);
+                self::insertAnswer($db, $answer, substr(strtolower($question), 0, 1), $record);
             }
         } else {
             $answer = $answers[0]
@@ -131,17 +133,25 @@ class AntwortParser implements ParserInterface
      *
      * @param  PDO  $db            DB connection to work with DB
      * @param  string  $answer     answer to insert
-     * @param  string  $question   question to search for question_id to create table reference
      * @param  string  $character  letter to search for char_id to create table reference
      * @param  string  $record
      * @return  void
      * @throws RedisException
      */
-    public static function insertAnswer(PDO $db, string $answer, string $question, string $character, string $record): void
+    public static function insertAnswer(PDO $db, string $answer,  string $character, string $record): void
     {
-        $question_id = intval(PDOAdapter::getQuestionIdFromDB($db, $question)[0]['question_id']);
-        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character)[0]['char_id']);
+        $array = explode('|', $record);
 
+        $question_id = end($array);
+        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character));
+        if($question_id === false){
+
+            Parser::$redis = new Redis();
+            Parser::$redis->connect('redis-stack');
+            Parser::$redis->rPush('url', $record);
+            exit;
+        }
+        $question_id = intval($question_id);
         if (
             PDOAdapter::checkAnswerInDB($db,
                 $answer,
@@ -149,13 +159,7 @@ class AntwortParser implements ParserInterface
             ) === false
         ) {
 
-            if($question_id == 0){
 
-                Parser::$redis = new Redis();
-                Parser::$redis->connect('redis-stack');
-                Parser::$redis->rPush('url', $record);
-
-            }
 
             PDOAdapter::insertAnswerToDB($db,
                 $question_id,

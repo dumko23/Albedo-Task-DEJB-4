@@ -162,20 +162,20 @@ class Parser
     /**
      * Processing $result parameter for duplicate entries of  given element (letter, interval or question)
      *
-     * @param  string  $tableName   table searched in
-     * @param  string  $whereValue  element value searched for
-     * @param  array  $result       resulting array from search process
-     * @param  string  $field       element searched for (letter, interval or question)
+     * @param  string  $tableName    table searched in
+     * @param  string  $whereValue   element value searched for
+     * @param  string|bool  $result  resulting array from search process
+     * @param  string  $field        element searched for (letter, interval or question)
      * @return  bool
      */
-    public static function checkForDuplicateEntries(string $tableName, string $whereValue, array $result, string $field): bool
+    public static function checkForDuplicateEntries(string $tableName, string $whereValue, string|bool $result, string $field): bool
     {
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
             LoggingAdapter::$logMessages['checkDuplicate'],
             ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
         );
-        if (isset($result[0])) {
+        if ($result !== false) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 LoggingAdapter::$logMessages['onFound'],

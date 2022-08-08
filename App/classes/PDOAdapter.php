@@ -150,9 +150,9 @@ class PDOAdapter
      *
      * @param  PDO  $dbConnection  instance of DB connection
      * @param  string  $char       character to search in DB table
-     * @return  bool|array
+     * @return string|bool
      */
-    public static function getCharIdFromDB(PDO $dbConnection, string $char): bool|array
+    public static function getCharIdFromDB(PDO $dbConnection, string $char): string|bool
     {
         try {
             LoggingAdapter::logOrDebug(
@@ -163,7 +163,7 @@ class PDOAdapter
             );
             $queryGet = $dbConnection->prepare('select char_id from parser_data.character_table where letter = ?');
             $queryGet->execute(["$char"]);
-            return $queryGet->fetchAll();
+            return $queryGet->fetchColumn();
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logError,
@@ -179,27 +179,27 @@ class PDOAdapter
      *
      * @param  PDO  $dbConnection  instance of PDO DB connection
      * @param  string  $question   interval name to search in DB table
-     * @return  bool|array
+     * @return string|bool
      */
-    public static function getQuestionIdFromDB(PDO $dbConnection, string $question): bool|array
+    public static function getQuestionIdFromDB(PDO $dbConnection, string $question): string|bool
     {
         try {
-//            LoggingAdapter::logOrDebug(
-//                LoggingAdapter::$logInfo,
-//                'info',
-//                LoggingAdapter::$logMessages['onSelect'],
-//                ['table' => 'questions', 'something' => 'question_id', 'value' => $question]
-//            );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                LoggingAdapter::$logMessages['onSelect'],
+                ['table' => 'questions', 'something' => 'question_id', 'value' => $question]
+            );
             $queryGet = $dbConnection->prepare('select question_id from parser_data.questions where question = ?');
             $queryGet->execute(["$question"]);
-            return $queryGet->fetchAll();
+            return $queryGet->fetchColumn();
         } catch (PDOException|Exception $exception) {
-//            LoggingAdapter::logOrDebug(
-//                LoggingAdapter::$logError,
-//                'error',
-//                LoggingAdapter::$logMessages['onPDOError'],
-//                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
-//            );
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logError,
+                'error',
+                LoggingAdapter::$logMessages['onPDOError'],
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+            );
         }
     }
 
