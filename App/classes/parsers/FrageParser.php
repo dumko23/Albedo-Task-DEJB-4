@@ -105,17 +105,14 @@ class FrageParser implements ParserInterface
         $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1)));
 
         if (
-//            Parser::checkForDuplicateEntries(
-//                'questions',
-//                $question,
-//                PDOAdapter::getQuestionIdFromDB(
-//                    $db,
-//                    $question,
-//                ),
-//                'question')
-
-        PDOAdapter::getQuestionIdFromDB($db, $question)
-            === false
+            Parser::checkForDuplicateEntries(
+                'questions',
+                $question,
+                PDOAdapter::getQuestionIdFromDB(
+                    $db,
+                    $question,
+                ),
+                'question') === false
         ) {
             PDOAdapter::insertQuestionToDB($db,
                 $char_id,
@@ -131,6 +128,10 @@ class FrageParser implements ParserInterface
         }
 
         $question_id = PDOAdapter::getQuestionIdFromDB(PDOAdapter::forceCreateConnectionToDB(), $question);
+
+        $db->query('KILL CONNECTION_ID()');
+        $db = null;
+
 
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');

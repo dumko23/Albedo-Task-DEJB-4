@@ -105,7 +105,7 @@ class CharParser implements ParserInterface
                         $character,
                         PDOAdapter::getCharIdFromDB($db, $character),
                         'letter'
-                    )
+                    ) === false
                 ) {
                     PDOAdapter::insertCharToDB($character);
                 } else {

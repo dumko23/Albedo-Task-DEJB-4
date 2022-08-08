@@ -175,17 +175,18 @@ class Parser
             LoggingAdapter::$logMessages['checkDuplicate'],
             ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
         );
-        if ($result !== false) {
+        if ($result === false) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
-                LoggingAdapter::$logMessages['onFound'],
+                LoggingAdapter::$logMessages['onNotFound'],
                 ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
             );
+
             return false;
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
-                LoggingAdapter::$logMessages['onNotFound'],
+                LoggingAdapter::$logMessages['onFound'],
                 ['table' => $tableName, 'field' => $field, 'value' => $whereValue]
             );
             return true;

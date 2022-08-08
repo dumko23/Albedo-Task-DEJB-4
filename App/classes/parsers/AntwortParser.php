@@ -137,13 +137,13 @@ class AntwortParser implements ParserInterface
      * @return  void
      * @throws RedisException
      */
-    public static function insertAnswer(PDO $db, string $answer,  string $character, string $record): void
+    public static function insertAnswer(PDO $db, string $answer, string $character, string $record): void
     {
         $array = explode('|', $record);
 
         $question_id = end($array);
         $char_id = intval(PDOAdapter::getCharIdFromDB($db, $character));
-        if($question_id === false){
+        if ($question_id === false) {
 
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
@@ -158,8 +158,6 @@ class AntwortParser implements ParserInterface
             ) === false
         ) {
 
-
-
             PDOAdapter::insertAnswerToDB($db,
                 $question_id,
                 $answer,
@@ -167,6 +165,9 @@ class AntwortParser implements ParserInterface
                 $char_id,
                 $record
             );
+
+            $db->query('KILL CONNECTION_ID()');
+            $db = null;
 
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,

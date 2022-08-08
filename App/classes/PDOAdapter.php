@@ -223,8 +223,8 @@ class PDOAdapter
             );
             $queryGet = $dbConnection->prepare('select answer_id from parser_data.answers where (answer = ? and question_id = ?)');
             $queryGet->execute(["$whereValue1", $whereValue2]);
-            $result = $queryGet->fetchAll();
-            if (!isset($result[0])) {
+            $result = $queryGet->fetchColumn();
+            if ($result === false) {
                 LoggingAdapter::logOrDebug(
                     LoggingAdapter::$logInfo,
                     'info',
@@ -409,7 +409,6 @@ class PDOAdapter
                                         question_id int(15)  auto_increment NOT NULL,
                                         question varchar(255) not null,
                                         char_id int,
-                                        interval_id int,
                                         FOREIGN KEY (char_id) references parser_data.character_table(char_id) ON DELETE CASCADE,
                                         PRIMARY KEY(question_id)
                             )
