@@ -166,9 +166,6 @@ class AntwortParser implements ParserInterface
                 $record
             );
 
-            $db->query('KILL CONNECTION_ID()');
-            $db = null;
-
         } else {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',

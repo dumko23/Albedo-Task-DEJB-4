@@ -129,9 +129,6 @@ class FrageParser implements ParserInterface
 
         $question_id = PDOAdapter::getQuestionIdFromDB(PDOAdapter::forceCreateConnectionToDB(), $question);
 
-        $db->query('KILL CONNECTION_ID()');
-        $db = null;
-
 
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');
