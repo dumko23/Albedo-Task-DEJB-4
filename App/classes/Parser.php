@@ -319,7 +319,7 @@ class Parser
                     self::$redis->connect('redis-stack');
                     $record = self::$redis->lPop('url');
 
-                    sleep(rand(1, 5));
+//                    sleep(rand(1, 5));
                     Parser::doJob($record);
                     //
 

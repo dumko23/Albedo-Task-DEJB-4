@@ -103,6 +103,7 @@ class AntwortParser implements ParserInterface
             ->find('td.Answer');
 
         $db = PDOAdapter::forceCreateConnectionToDB();
+
         if (count($answers) > 1) {
             for ($i = 0; $i < count($answers); $i++) {
 
@@ -128,9 +129,8 @@ class AntwortParser implements ParserInterface
     /**
      * Insert answer in MYSQL table
      *
-     * @param  PDO  $db            DB connection to work with DB
-     * @param  string  $answer     answer to insert
-     * @param  string  $character  letter to search for char_id to create table reference
+     * @param  PDO  $db         DB connection to work with DB
+     * @param  string  $answer  answer to insert
      * @param  string  $record
      * @return  void
      * @throws RedisException
@@ -143,12 +143,12 @@ class AntwortParser implements ParserInterface
         $char = $array[3];
         $char_id = intval(PDOAdapter::getCharIdFromDB($db, $char));
 
-        if (!$question_id) {
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            Parser::$redis->rPush('url', $record);
-            exit;
-        }
+//        if (!$question_id) {
+//            Parser::$redis = new Redis();
+//            Parser::$redis->connect('redis-stack');
+//            Parser::$redis->rPush('url', $record);
+//            exit;
+//        }
         $question_id = intval($question_id);
         if (
             PDOAdapter::checkAnswerInDB($db,
