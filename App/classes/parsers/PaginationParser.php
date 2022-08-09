@@ -101,9 +101,17 @@ class PaginationParser implements ParserInterface
         foreach ($listOfIntervals as $interval) {
             $intervalName = $interval->getAttribute('href');
 
+            $newRecord = $_ENV['URL'] . $intervalName . '|FrageParser';
+
+            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                'info',
+                'Pushing new record to queue: "{value}"; processed: "{field}"',
+                ['field' => $record, 'value' => $newRecord]
+            );
+
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->rPush('url', $_ENV['URL'] . $intervalName . '|FrageParser');
+            Parser::$redis->rPush('url', $newRecord);
         }
     }
 

@@ -339,7 +339,7 @@ class Parser
 
             exit();
 
-        } catch (RedisException $exception) {
+        } catch (RedisException|Exception $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 "error",
                 LoggingAdapter::$logMessages['onError'],
@@ -351,21 +351,23 @@ class Parser
     /**
      * Performing specific parse processes for intervals, questions and answers using ClassName specified in $record.
      *
-     * @param  string  $record  Redis queue record type of "url-to-parse|ClassName"
+     * @param  string|bool  $record  Redis queue record type of "url-to-parse|ClassName"
      * @return  void
      */
-    public static function doJob(string $record): void
+    public static function doJob(string|bool $record): void
     {
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
             'Starting to process record: "{record}".',
             ['record' => $record]
         );
-        $array = explode('|', $record);
-        $url = $array[0];
-        $className = $array[1];
-        $parser = "App\classes\parsers\\$className";
-        $parser::parse($url, $record);
+        if ($record !== '' && $record !== false){
+            $array = explode('|', $record);
+            $url = $array[0];
+            $className = $array[1];
+            $parser = "App\classes\parsers\\$className";
+            $parser::parse($url, $record);
+        }
     }
 
 

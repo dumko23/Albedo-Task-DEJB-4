@@ -140,18 +140,16 @@ class AntwortParser implements ParserInterface
     {
         $array = explode('|', $record);
 
-        $question_id =  intval($array[2]);
-//        $char = $array[3];
-//        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $char));
+        $question_id = intval($array[2]);
         $char_id = intval($array[3]);
+        $length = strlen($answer);
 
-//        if (!$question_id) {
-//            Parser::$redis = new Redis();
-//            Parser::$redis->connect('redis-stack');
-//            Parser::$redis->rPush('url', $record);
-//            exit;
-//        }
-//        $question_id = intval($question_id);
+        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+            'info',
+            'Verifying data: answer: "answ"; question_id: "{qid}; char_id: "{cid}"; length: "{len}"',
+            ['answ' => $answer, 'qid' => $question_id, 'cid' => $char_id, 'len' => $length]
+        );
+
         if (
             PDOAdapter::checkAnswerInDB($db,
                 $answer,
@@ -162,7 +160,7 @@ class AntwortParser implements ParserInterface
             PDOAdapter::insertAnswerToDB($db,
                 $question_id,
                 $answer,
-                strlen($answer),
+                $length,
                 $char_id,
                 $record
             );
