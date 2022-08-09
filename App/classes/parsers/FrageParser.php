@@ -130,9 +130,10 @@ class FrageParser implements ParserInterface
         $question_id = PDOAdapter::getQuestionIdFromDB($db, $question);
 
 
+
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');
-        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser|' . $question_id . '|' . substr(strtolower($question), 0, 1));
+        Parser::$redis->rPush('url', $_ENV['URL'] . $link . '|AntwortParser|' . $question_id . '|' . $char_id);
     }
 
     /**
@@ -147,7 +148,9 @@ class FrageParser implements ParserInterface
         $result = Parser::parseArrayOfElementsFromDocument($doc, $needle);
         $resultArray = [];
         for ($i = 0; $i < count($result); $i = $i + 2) {
-            $resultArray[$result[$i]->getAttribute('href')] = $result[$i]->innerHtml();
+            if(!array_key_exists($result[$i]->getAttribute('href'), $resultArray)){
+                $resultArray[$result[$i]->getAttribute('href')] = $result[$i]->innerHtml();
+            }
         }
         return $resultArray;
     }

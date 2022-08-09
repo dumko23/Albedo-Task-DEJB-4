@@ -7,6 +7,7 @@ use App\classes\Parser;
 use App\classes\PDOAdapter;
 use DiDom\Document;
 use DiDom\Exceptions\InvalidSelectorException;
+use Exception;
 use PDO;
 use PDOException;
 use Redis;
@@ -71,7 +72,7 @@ class AntwortParser implements ParserInterface
             );
             //
 
-        } catch (InvalidSelectorException|RedisException|PDOException $exception) {
+        } catch (InvalidSelectorException|RedisException|PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
@@ -97,7 +98,7 @@ class AntwortParser implements ParserInterface
      * @return void
      * @throws InvalidSelectorException|RedisException
      */
-    public static function prepareInsert(Document $questionPage, string $record, string $char): void
+    public static function prepareInsert(Document $questionPage, string $record): void
     {
         $answers = $questionPage
             ->find('td.Answer');
@@ -139,9 +140,10 @@ class AntwortParser implements ParserInterface
     {
         $array = explode('|', $record);
 
-        $question_id = $array[2];
-        $char = $array[3];
-        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $char));
+        $question_id =  intval($array[2]);
+//        $char = $array[3];
+//        $char_id = intval(PDOAdapter::getCharIdFromDB($db, $char));
+        $char_id = intval($array[3]);
 
 //        if (!$question_id) {
 //            Parser::$redis = new Redis();
@@ -149,7 +151,7 @@ class AntwortParser implements ParserInterface
 //            Parser::$redis->rPush('url', $record);
 //            exit;
 //        }
-        $question_id = intval($question_id);
+//        $question_id = intval($question_id);
         if (
             PDOAdapter::checkAnswerInDB($db,
                 $answer,
