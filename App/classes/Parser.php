@@ -271,7 +271,7 @@ class Parser
                 // Skipping iteration if pidList is full or queue is empty while pidList isn't
                 if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
                     continue;
-                } else if (count(self::$pidList) !== 0 && self::$redis->lLen('url') === 0) {
+                } else if (count(self::$pidList) !== 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
                     continue;
                 }
 
