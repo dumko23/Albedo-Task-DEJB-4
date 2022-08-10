@@ -191,7 +191,7 @@ class PDOAdapter
                 LoggingAdapter::$logInfo,
                 'info',
                 LoggingAdapter::$logMessages['onSelect'],
-                ['table' => 'questions', 'something' => 'question_id', 'value' => $question]
+                ['table' => 'questions', 'something' => 'question', 'value' => $question]
             );
 
             $queryGet = $dbConnection->prepare('select question_id from parser_data.questions where question = ?');
