@@ -245,9 +245,6 @@ class Parser
                 }
             });
 
-            PDOAdapter::forceCloseConnectionToDB();
-
-
             while (self::$parse) {
 
                 self::$redis = new Redis();

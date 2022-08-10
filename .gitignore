@@ -3,3 +3,5 @@
 /App/.env
 .env
 App/classes/logging/logs/log_file.log
+/mysql
+/redis
