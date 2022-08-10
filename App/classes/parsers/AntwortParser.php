@@ -146,7 +146,7 @@ class AntwortParser implements ParserInterface
 
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
-            'Verifying data: answer: "answ"; question_id: "{qid}; char_id: "{cid}"; length: "{len}"',
+            'Verifying data: answer: "{answ}"; question_id: "{qid}; char_id: "{cid}"; length: "{len}"',
             ['answ' => $answer, 'qid' => $question_id, 'cid' => $char_id, 'len' => $length]
         );
 
