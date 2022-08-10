@@ -76,7 +76,7 @@ class AntwortParser implements ParserInterface
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class, 'record' => $record]
             );
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,

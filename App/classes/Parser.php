@@ -67,7 +67,7 @@ class Parser
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class, 'record' => 'Initialization']
             );
         }
 
@@ -118,7 +118,7 @@ class Parser
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => $exception->getErrorClass()]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => $exception->getErrorClass(), 'record' => $record]
             );
             // Returning URL back to the queue
             Parser::$redis = new Redis();
@@ -245,6 +245,9 @@ class Parser
                 }
             });
 
+            PDOAdapter::forceCloseConnectionToDB();
+
+
             while (self::$parse) {
 
                 self::$redis = new Redis();
@@ -343,7 +346,7 @@ class Parser
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 "error",
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class]
+                ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => self::class, 'record' => 'Main process']
             );
         }
     }

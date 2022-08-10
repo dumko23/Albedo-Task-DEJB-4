@@ -74,7 +74,7 @@ class PaginationParser implements ParserInterface
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception2->getMessage(), 'number' => $exception2->getLine(), 'class' => self::class]
+                ['message' => $exception2->getMessage(), 'number' => $exception2->getLine(), 'class' => self::class, 'record' => $record]
             );
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,

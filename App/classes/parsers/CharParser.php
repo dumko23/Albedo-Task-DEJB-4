@@ -6,6 +6,7 @@ use App\classes\logging\LoggingAdapter;
 use App\classes\Parser;
 use App\classes\PDOAdapter;
 use DiDom\Exceptions\InvalidSelectorException;
+use Exception;
 use PDOException;
 use Redis;
 use RedisException;
@@ -68,16 +69,16 @@ class CharParser implements ParserInterface
 
             //
 
-        } catch (RedisException|PDOException $exception2) {
+        } catch (RedisException|PDOException|Exception $exception2) {
             LoggingAdapter::logOrDebug(LoggingAdapter::$logError,
                 'error',
                 LoggingAdapter::$logMessages['onError'],
-                ['message' => $exception2->getMessage(), 'number' => $exception2->getLine(), 'class' => self::class]
+                ['message' => $exception2->getMessage(), 'number' => $exception2->getLine(), 'class' => self::class, 'record' => $record]
             );
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'notice',
-                'An PDO Error occurred while processing "{value}. Pushing back to queue"',
+                'An Error occurred while processing "{value}. Pushing back to queue"',
                 ['value' => $record]
             );
             Parser::$redis = new Redis();
