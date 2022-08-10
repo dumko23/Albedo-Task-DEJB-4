@@ -313,11 +313,15 @@ class Parser
                         'Executing fork'
                     );
 
-
                     //
                     self::$redis = new Redis();
                     self::$redis->connect('redis-stack');
-                    $record = self::$redis->lPop('url');
+                    if(self::$redis->lLen('url') === 0){
+                        $record = self::$redis->lPop('antwort');
+                    } else {
+                        $record = self::$redis->lPop('url');
+                    }
+
 
 //                    sleep(rand(1, 5));
                     Parser::doJob($record);
@@ -369,6 +373,4 @@ class Parser
             $parser::parse($url, $record);
         }
     }
-
-
 }
