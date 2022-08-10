@@ -361,7 +361,7 @@ class Parser
             'Starting to process record: "{record}".',
             ['record' => $record]
         );
-        if ($record !== '' && $record !== false){
+        if ($record !== false){
             $array = explode('|', $record);
             $url = $array[0];
             $className = $array[1];
