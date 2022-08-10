@@ -276,7 +276,7 @@ class Parser
                 }
 
                 // Breaking loop if there is no URL in queue and pidList is empty
-                if (count(self::$pidList) === 0 && self::$redis->lLen('url') === 0) {
+                if (count(self::$pidList) === 0 && self::$redis->lLen('url') === 0 && self::$redis->lLen('antwort') === 0) {
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
