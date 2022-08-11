@@ -30,7 +30,7 @@ services:
       - ./redis/data:/data
     depends_on:
       - obfs4-bridge
-    command: redis-server --replica-read-only no
+    command: redis-server --protected-mode no --replica-read-only no
 
   obfs4-bridge:
     image: thetorproject/obfs4-bridge:latest
