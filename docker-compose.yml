@@ -8,15 +8,18 @@ services:
       - ./:/usr/src/myapp
     depends_on:
       - mysql
+
   mysql:
-        image: mysql:latest
-        ports:
-          - "3306:3306"
-        environment:
-          MYSQL_ROOT_PASSWORD: mysqlpw
-          MYSQL_DATABASE: parser_data
-        volumes:
-          - ./mysql:/var/lib/mysql
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysqlpw
+      MYSQL_DATABASE: parser_data
+    volumes:
+      - ./mysql:/var/lib/mysql
+    depends_on:
+      - redis-stack
 
   redis-stack:
     image: redis/redis-stack:latest
@@ -25,6 +28,10 @@ services:
       - "8001:8001"
     volumes:
       - ./redis/data:/data
+    depends_on:
+      - obfs4-bridge
+    command: redis-server --replica-read-only no
+
   obfs4-bridge:
     image: thetorproject/obfs4-bridge:latest
     environment:
