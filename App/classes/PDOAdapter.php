@@ -367,7 +367,7 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Dropping existing tables in parser_data DB.'
+                'Dropping existing tables in parser_data DB. Cleaning Redis queue'
             );
             static::db()->prepare('SET foreign_key_checks = 0')->execute();
             static::db()->prepare('SET GLOBAL connect_timeout = 60')->execute();
@@ -383,7 +383,8 @@ class PDOAdapter
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Dropped successfully.'
+                'Dropped successfully. Redis queue has "{length}" records',
+                ['length' => Parser::$redis->lLen('url')]
             );
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(

@@ -276,7 +276,7 @@ class Parser
                 }
 
                 // Breaking loop if there is no URL in queue and pidList is empty
-                if (count(self::$pidList) === 0 && self::$redis->lLen('url') === 0 && self::$redis->lLen('antwort') === 0) {
+                if (count(self::$pidList) === 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
@@ -300,6 +300,8 @@ class Parser
                     // Parent process after success fork
                     self::$pidList[] = $pid;
 
+                    PDOAdapter::forceCloseConnectionToDB();
+
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
@@ -316,14 +318,9 @@ class Parser
                     //
                     self::$redis = new Redis();
                     self::$redis->connect('redis-stack');
-                    if(self::$redis->lLen('url') === 0){
-                        $record = self::$redis->lPop('antwort');
-                    } else {
-                        $record = self::$redis->lPop('url');
-                    }
+                    $record = self::$redis->lPop('url');
 
-
-//                    sleep(rand(1, 5));
+//                    sleep(rand(1, 3));
                     Parser::doJob($record);
                     //
 
