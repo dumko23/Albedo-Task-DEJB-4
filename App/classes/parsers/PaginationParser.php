@@ -63,7 +63,7 @@ class PaginationParser implements ParserInterface
 
             $arrayOfPagination = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
-            PaginationParser::insertIntervals($arrayOfPagination, $record);
+            self::insertIntervals($arrayOfPagination, $record);
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',

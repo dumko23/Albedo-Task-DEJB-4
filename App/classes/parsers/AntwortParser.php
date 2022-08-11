@@ -103,11 +103,24 @@ class AntwortParser implements ParserInterface
     {
         $answers = $questionPage
             ->find('td.Answer');
+        $answersCount = count($answers);
 
         $db = PDOAdapter::forceCreateConnectionToDB();
 
-        if (count($answers) > 1) {
-            for ($i = 0; $i < count($answers); $i++) {
+        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+            'info',
+            'Number of answers on the page = "{count}"',
+            ['count' => $answersCount]
+        );
+
+        if ($answersCount > 1) {
+            for ($i = 0; $i < $answersCount; $i++) {
+
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'info',
+                    'Inserting "{num}" from "{count}" answers',
+                    ['count' => $answersCount, 'num' => $i]
+                );
 
                 $answer = $answers[$i]
                     ->firstChild()
@@ -116,7 +129,20 @@ class AntwortParser implements ParserInterface
 
                 self::insertAnswer($db, $answer, $record);
             }
-        } else {
+
+            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                'info',
+                'All of "{count}" answers inserted',
+                ['count' => $answersCount,]
+            );
+        } else if ($answersCount === 1){
+
+            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                'info',
+                'Inserting exactly "{count}" answer',
+                ['count' => $answersCount, ]
+            );
+
             $answer = $answers[0]
                 ->firstChild()
                 ->getNode()
