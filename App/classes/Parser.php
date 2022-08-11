@@ -16,8 +16,10 @@ use RedisException;
 
 class Parser
 {
+
     public static array $pidList = [];
-    public static bool $parse = true;
+    public static bool $parseMain = true;
+    public static bool $parseAnswers = true;
 
     public static Redis $redis;
 
@@ -54,7 +56,7 @@ class Parser
             if (self::$redis->lLen('url') === 0) {
                 self::$redis->rPush('url', $_ENV['URL'] . '|CharParser');
             }
-            if($_ENV['FRESH_PARSE'] === 'true'){
+            if ($_ENV['FRESH_PARSE'] === 'true') {
                 Parser::dropNCreate(); // To initialize fresh tables
                 LoggingAdapter::logOrDebug(
                     LoggingAdapter::$logInfo,
@@ -204,7 +206,8 @@ class Parser
     public static function doParse(): void
     {
         try {
-            self::$parse = true;
+            self::$parseMain = true;
+            self::$parseAnswers = true;
             if (self::$redis->lIndex('url', 0) === $_ENV['URL'] . '|CharParser') {
                 self::doJob(self::$redis->lPop('url'));
             }
@@ -218,7 +221,9 @@ class Parser
                         'info',
                         'Closing forks...'
                     );
-                    self::$parse = false;
+                    self::$parseMain = false;
+                    self::$parseAnswers = false;
+
                     if (count(self::$pidList) !== 0) {
                         foreach (self::$pidList as $key => $pid) {
 
@@ -245,95 +250,192 @@ class Parser
                 }
             });
 
-            while (self::$parse) {
+            self::parseCycle(self::$parseMain, 'url');
 
-                self::$redis = new Redis();
-                self::$redis->connect('redis-stack');
+//            while (self::$parseMain) {
+//
+//                self::$redis = new Redis();
+//                self::$redis->connect('redis-stack');
+//
+//                // Checking if there are any exited processes
+//                if (count(self::$pidList) !== 0) {
+//                    foreach (self::$pidList as $key => $pid) {
+//                        $res = pcntl_waitpid($pid, $status, WNOHANG);
+//                        // If the process has already exited
+//                        // Unsetting exited process from pidList
+//                        if ($res == -1 || $res > 0) {
+//                            LoggingAdapter::logOrDebug(
+//                                LoggingAdapter::$logInfo,
+//                                'info',
+//                                'Unsetting pid: {pid}',
+//                                ['pid' => $pid]
+//                            );
+//                            unset(self::$pidList[$key]);
+//                        }
+//                    }
+//                }
+//
+//                // Skipping iteration if pidList is full or queue is empty while pidList isn't
+//                if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
+//                    continue;
+//                } else if (count(self::$pidList) !== 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
+//                    continue;
+//                }
+//
+//                // Breaking loop if there is no URL in queue and pidList is empty
+//                if (count(self::$pidList) === 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
+//                    LoggingAdapter::logOrDebug(
+//                        LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Breaking...'
+//                    );
+//                    static::$parseMain = false;
+//                    break;
+//                }
+//
+//                // Forking
+//                $pid = pcntl_fork();
+//
+//                if ($pid == -1) {
+//                    // If fork failed
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'error',
+//                        'Error forking...'
+//                    );
+//                    exit();
+//                } else if ($pid) {
+//                    // Parent process after success fork
+//                    self::$pidList[] = $pid;
+//
+//                    LoggingAdapter::logOrDebug(
+//                        LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Forking pid: {pid}',
+//                        ['pid' => $pid]
+//                    );
+//                } else {
+//                    // Child process after success fork
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Executing fork'
+//                    );
+//
+//                    //
+//                    self::$redis = new Redis();
+//                    self::$redis->connect('redis-stack');
+//                    $record = self::$redis->lPop('url');
+//
+////                    sleep(rand(1, 3));
+//                    Parser::doJob($record);
+//                    //
+//
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'info',
+//                        "Job done on URL: {url}",
+//                        ['url' => $record]
+//                    );
+//                    exit();
+//                }
+//            }
 
-                // Checking if there are any exited processes
-                if (count(self::$pidList) !== 0) {
-                    foreach (self::$pidList as $key => $pid) {
-                        $res = pcntl_waitpid($pid, $status, WNOHANG);
-                        // If the process has already exited
-                        // Unsetting exited process from pidList
-                        if ($res == -1 || $res > 0) {
-                            LoggingAdapter::logOrDebug(
-                                LoggingAdapter::$logInfo,
-                                'info',
-                                'Unsetting pid: {pid}',
-                                ['pid' => $pid]
-                            );
-                            unset(self::$pidList[$key]);
-                        }
-                    }
-                }
-
-                // Skipping iteration if pidList is full or queue is empty while pidList isn't
-                if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
-                    continue;
-                } else if (count(self::$pidList) !== 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
-                    continue;
-                }
-
-                // Breaking loop if there is no URL in queue and pidList is empty
-                if (count(self::$pidList) === 0 && (self::$redis->lLen('url') === 0 || self::$redis->lLen('url') === false)) {
-                    LoggingAdapter::logOrDebug(
-                        LoggingAdapter::$logInfo,
-                        'info',
-                        'Breaking...'
-                    );
-                    static::$parse = false;
-                    break;
-                }
-
-                // Forking
-                $pid = pcntl_fork();
-
-                if ($pid == -1) {
-                    // If fork failed
-                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                        'error',
-                        'Error forking...'
-                    );
-                    exit();
-                } else if ($pid) {
-                    // Parent process after success fork
-                    self::$pidList[] = $pid;
-
-                    LoggingAdapter::logOrDebug(
-                        LoggingAdapter::$logInfo,
-                        'info',
-                        'Forking pid: {pid}',
-                        ['pid' => $pid]
-                    );
-                } else {
-                    // Child process after success fork
-                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                        'info',
-                        'Executing fork'
-                    );
-
-                    //
-                    self::$redis = new Redis();
-                    self::$redis->connect('redis-stack');
-                    $record = self::$redis->lPop('url');
-
-//                    sleep(rand(1, 3));
-                    Parser::doJob($record);
-                    //
-
-                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                        'info',
-                        "Job done on URL: {url}",
-                        ['url' => $record]
-                    );
-                    exit();
-                }
-            }
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Parse done.'
+                'Main parse processes completed. Starting to parse answers.'
+            );
+
+            self::parseCycle(self::$parseAnswers, 'answers');
+
+//            while (self::$parseMain) {
+//
+//                self::$redis = new Redis();
+//                self::$redis->connect('redis-stack');
+//
+//                // Checking if there are any exited processes
+//                if (count(self::$pidList) !== 0) {
+//                    foreach (self::$pidList as $key => $pid) {
+//                        $res = pcntl_waitpid($pid, $status, WNOHANG);
+//                        // If the process has already exited
+//                        // Unsetting exited process from pidList
+//                        if ($res == -1 || $res > 0) {
+//                            LoggingAdapter::logOrDebug(
+//                                LoggingAdapter::$logInfo,
+//                                'info',
+//                                'Unsetting pid: {pid}',
+//                                ['pid' => $pid]
+//                            );
+//                            unset(self::$pidList[$key]);
+//                        }
+//                    }
+//                }
+//
+//                // Skipping iteration if pidList is full or queue is empty while pidList isn't
+//                if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
+//                    continue;
+//                } else if (count(self::$pidList) !== 0 && (self::$redis->lLen('answers') === 0 || self::$redis->lLen('answers') === false)) {
+//                    continue;
+//                }
+//
+//                // Breaking loop if there is no URL in queue and pidList is empty
+//                if (count(self::$pidList) === 0 && (self::$redis->lLen('answers') === 0 || self::$redis->lLen('answers') === false)) {
+//                    LoggingAdapter::logOrDebug(
+//                        LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Breaking...'
+//                    );
+//                    static::$parseMain = false;
+//                    break;
+//                }
+//
+//                // Forking
+//                $pid = pcntl_fork();
+//
+//                if ($pid == -1) {
+//                    // If fork failed
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'error',
+//                        'Error forking...'
+//                    );
+//                    exit();
+//                } else if ($pid) {
+//                    // Parent process after success fork
+//                    self::$pidList[] = $pid;
+//
+//                    LoggingAdapter::logOrDebug(
+//                        LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Forking pid: {pid}',
+//                        ['pid' => $pid]
+//                    );
+//                } else {
+//                    // Child process after success fork
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'info',
+//                        'Executing fork'
+//                    );
+//
+//                    //
+//                    self::$redis = new Redis();
+//                    self::$redis->connect('redis-stack');
+//                    $record = self::$redis->lPop('answers');
+//
+////                    sleep(rand(1, 3));
+//                    Parser::doJob($record);
+//                    //
+//
+//                    LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+//                        'info',
+//                        "Job done on URL: {url}",
+//                        ['url' => $record]
+//                    );
+//                    exit();
+//                }
+//            }
+
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Answers parse processes completed. Closing parser. Bye!'
             );
 
             exit();
@@ -360,12 +462,101 @@ class Parser
             'Starting to process record: "{record}".',
             ['record' => $record]
         );
-        if ($record !== false){
+        if ($record !== false) {
             $array = explode('|', $record);
             $url = $array[0];
             $className = $array[1];
             $parser = "App\classes\parsers\\$className";
             $parser::parse($url, $record);
+        }
+    }
+
+    public static function parseCycle(bool $process, string $listName): void
+    {
+        while ($process) {
+
+            self::$redis = new Redis();
+            self::$redis->connect('redis-stack');
+
+            // Checking if there are any exited processes
+            if (count(self::$pidList) !== 0) {
+                foreach (self::$pidList as $key => $pid) {
+                    $res = pcntl_waitpid($pid, $status, WNOHANG);
+                    // If the process has already exited
+                    // Unsetting exited process from pidList
+                    if ($res == -1 || $res > 0) {
+                        LoggingAdapter::logOrDebug(
+                            LoggingAdapter::$logInfo,
+                            'info',
+                            'Unsetting pid: {pid}',
+                            ['pid' => $pid]
+                        );
+                        unset(self::$pidList[$key]);
+                    }
+                }
+            }
+
+            // Skipping iteration if pidList is full or queue is empty while pidList isn't
+            if (count(self::$pidList) === intval($_ENV['THREAD_NUM'])) {
+                continue;
+            } else if (count(self::$pidList) !== 0 && (self::$redis->lLen($listName) === 0 || self::$redis->lLen($listName) === false)) {
+                continue;
+            }
+
+            // Breaking loop if there is no URL in queue and pidList is empty
+            if (count(self::$pidList) === 0 && (self::$redis->lLen($listName) === 0 || self::$redis->lLen($listName) === false)) {
+                LoggingAdapter::logOrDebug(
+                    LoggingAdapter::$logInfo,
+                    'info',
+                    'Breaking...'
+                );
+                $process = false;
+                break;
+            }
+
+            // Forking
+            $pid = pcntl_fork();
+
+            if ($pid == -1) {
+                // If fork failed
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'error',
+                    'Error forking...'
+                );
+                exit();
+            } else if ($pid) {
+                // Parent process after success fork
+                self::$pidList[] = $pid;
+
+                LoggingAdapter::logOrDebug(
+                    LoggingAdapter::$logInfo,
+                    'info',
+                    'Forking pid: {pid}',
+                    ['pid' => $pid]
+                );
+            } else {
+                // Child process after success fork
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'info',
+                    'Executing fork'
+                );
+
+                //
+                self::$redis = new Redis();
+                self::$redis->connect('redis-stack');
+                $record = self::$redis->lPop($listName);
+
+//                    sleep(rand(1, 3));
+                Parser::doJob($record);
+                //
+
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'info',
+                    "Job done on URL: {url}",
+                    ['url' => $record]
+                );
+                exit();
+            }
         }
     }
 }

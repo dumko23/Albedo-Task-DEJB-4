@@ -352,7 +352,7 @@ class PDOAdapter
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->rPush('url', $record);
+            Parser::$redis->rPush('answers', $record);
         }
     }
 
@@ -380,11 +380,12 @@ class PDOAdapter
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->del('url');
+            Parser::$redis->del('answers');
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Dropped successfully. Redis queue has "{length}" records',
-                ['length' => Parser::$redis->lLen('url')]
+                'Dropped successfully. Redis queue has "{lengthURL}" url and "{lengthANSW}" answer records',
+                ['lengthURL' => Parser::$redis->lLen('url'), 'lengthANSW' => Parser::$redis->lLen('answer')]
             );
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(

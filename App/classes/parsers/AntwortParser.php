@@ -38,7 +38,7 @@ class AntwortParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
-                    Parser::$redis->lPush('url', $record);
+                    Parser::$redis->lPush('answer', $record);
 
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
