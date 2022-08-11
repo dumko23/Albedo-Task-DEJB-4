@@ -300,8 +300,6 @@ class Parser
                     // Parent process after success fork
                     self::$pidList[] = $pid;
 
-                    PDOAdapter::forceCloseConnectionToDB();
-
                     LoggingAdapter::logOrDebug(
                         LoggingAdapter::$logInfo,
                         'info',
