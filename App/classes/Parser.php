@@ -260,6 +260,15 @@ class Parser
                 'Main parse processes completed. Starting to parse answers.'
             );
 
+            $answerList = self::$redis->lLen('answers');
+
+            LoggingAdapter::logOrDebug(
+                LoggingAdapter::$logInfo,
+                'info',
+                'Answer queue has "{number}" record',
+                ['number' => $answerList]
+            );
+
             self::parseCycle(self::$parseAnswers, 'answers');
 
             LoggingAdapter::logOrDebug(

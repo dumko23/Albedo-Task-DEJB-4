@@ -112,8 +112,8 @@ class AntwortParser implements ParserInterface
 
         LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
             'info',
-            'Number of answers on the page = "{count}"',
-            ['count' => $answersCount]
+            'Number of answers = "{count}" on the "{record}"',
+            ['count' => $answersCount, 'record' => $record]
         );
 
 
@@ -122,7 +122,7 @@ class AntwortParser implements ParserInterface
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Inserting "{num}" from "{count}" answers',
-                ['count' => $answersCount, 'num' => $i]
+                ['count' => $answersCount, 'num' => $i+1]
             );
 
             $answer = $answers[$i]
