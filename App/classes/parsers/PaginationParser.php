@@ -32,9 +32,7 @@ class PaginationParser implements ParserInterface
                         'info',
                         'Force-closing fork...'
                     );
-                    Parser::$redis = new Redis();
-                    Parser::$redis->connect('redis-stack');
-                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
                     Parser::$redis->lPush('url', $record);
 
@@ -85,9 +83,7 @@ class PaginationParser implements ParserInterface
                 'An PDO Error occurred while processing "{value}. Pushing back to queue"',
                 ['value' => $record]
             );
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
             Parser::$redis->rPush('url', $record);
         }

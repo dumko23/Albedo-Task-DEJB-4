@@ -36,9 +36,7 @@ class AntwortParser implements ParserInterface
                         'info',
                         'Force-closing fork...'
                     );
-                    Parser::$redis = new Redis();
-                    Parser::$redis->connect('redis-stack');
-                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
                     Parser::$redis->lPush('answer', $record);
 
                     LoggingAdapter::logOrDebug(
@@ -86,9 +84,7 @@ class AntwortParser implements ParserInterface
                 'An PDO Error occurred while processing "{value}". Pushing back to queue',
                 ['value' => $record]
             );
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
             Parser::$redis->rPush('url', $record);
         }

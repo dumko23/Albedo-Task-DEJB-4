@@ -395,10 +395,17 @@ class Parser
                 Parser::doJob($record);
                 //
 
+                $num = self::$redis->lLen($listName);
+
                 LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                     'info',
                     "Job done on URL: {url}",
                     ['url' => $record]
+                );
+                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+                    'info',
+                    "Records left in queue: {num}",
+                    ['num' => $num]
                 );
                 exit();
             }

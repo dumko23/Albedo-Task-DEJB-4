@@ -35,9 +35,7 @@ class FrageParser implements ParserInterface
                         'info',
                         'Force-closing fork...'
                     );
-                    Parser::$redis = new Redis();
-                    Parser::$redis->connect('redis-stack');
-                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
                     Parser::$redis->lPush('url', $record);
 
@@ -87,9 +85,7 @@ class FrageParser implements ParserInterface
                 'An Error occurred while processing "{value}. Pushing back to queue"',
                 ['value' => $record]
             );
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
             Parser::$redis->rPush('url', $record);
         }
@@ -108,15 +104,16 @@ class FrageParser implements ParserInterface
     {
         $db = PDOAdapter::forceCreateConnectionToDB();
         $char_id = intval(PDOAdapter::getCharIdFromDB($db, substr(strtolower($question), 0, 1)));
+        $result = PDOAdapter::getQuestionIdFromDB(
+            $db,
+            $question
+        );
 
         if (
             Parser::checkForDuplicateEntries(
                 'questions',
                 $question,
-                PDOAdapter::getQuestionIdFromDB(
-                    $db,
-                    $question,
-                ),
+                $result,
                 'question') === false
         ) {
             PDOAdapter::insertQuestionToDB($db,
@@ -141,9 +138,7 @@ class FrageParser implements ParserInterface
             ['field' => $record, 'value' => $newRecord]
         );
 
-        Parser::$redis = new Redis();
-        Parser::$redis->connect('redis-stack');
-        Parser::$redis->config("SET", 'replica-read-only', 'no');
+
 
         Parser::$redis->rPush('answers', $newRecord);
     }
