@@ -444,10 +444,15 @@ class PDOAdapter
                                         PRIMARY KEY(answer_id)
                             )
                         ')->execute();
+
+            $char = static::db()->prepare('SELECT COUNT(1) FROM parser_data.character_table')->execute();
+            $question = static::db()->prepare('SELECT COUNT(1) FROM parser_data.questions')->execute();
+            $answer = static::db()->prepare('SELECT COUNT(1) FROM parser_data.answers')->execute();
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
-                'Created successfully.'
+                'Created successfully. Tables have c = {char}, q = {question} and a = {answer} rows.',
+                ['char' => $char, 'question' => $question, 'answer' => $answer]
             );
         } catch (PDOException|Exception $exception) {
             LoggingAdapter::logOrDebug(

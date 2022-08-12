@@ -66,6 +66,7 @@ class PaginationParser implements ParserInterface
             $arrayOfPagination = Parser::parseArrayOfElementsFromDocument($doc, 'ul.dnrg');
 
             self::insertIntervals($arrayOfPagination, $record);
+
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
                 'Exiting fork process...',
@@ -103,9 +104,9 @@ class PaginationParser implements ParserInterface
     private static function insertIntervals(array $listOfIntervals, string $record): void
     {
         foreach ($listOfIntervals as $interval) {
-            $intervalName = $interval->getAttribute('href');
+            $intervalLink = $interval->getAttribute('href');
 
-            $newRecord = $_ENV['URL'] . $intervalName . '|FrageParser';
+            $newRecord = $_ENV['URL'] . $intervalLink . '|FrageParser';
 
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
