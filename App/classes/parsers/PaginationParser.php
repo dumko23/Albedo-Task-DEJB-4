@@ -34,6 +34,8 @@ class PaginationParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
+                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
                     Parser::$redis->lPush('url', $record);
 
                     LoggingAdapter::logOrDebug(
@@ -84,6 +86,8 @@ class PaginationParser implements ParserInterface
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
             Parser::$redis->rPush('url', $record);
         }
     }
@@ -111,6 +115,8 @@ class PaginationParser implements ParserInterface
 
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
             Parser::$redis->rPush('url', $newRecord);
         }
     }

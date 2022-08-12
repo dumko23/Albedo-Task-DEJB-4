@@ -37,6 +37,8 @@ class FrageParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
+                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
                     Parser::$redis->lPush('url', $record);
 
                     LoggingAdapter::logOrDebug(
@@ -87,6 +89,8 @@ class FrageParser implements ParserInterface
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
             Parser::$redis->rPush('url', $record);
         }
     }
@@ -139,6 +143,8 @@ class FrageParser implements ParserInterface
 
         Parser::$redis = new Redis();
         Parser::$redis->connect('redis-stack');
+        Parser::$redis->config("SET", 'replica-read-only', 'no');
+
         Parser::$redis->rPush('answers', $newRecord);
     }
 

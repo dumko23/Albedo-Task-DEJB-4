@@ -46,6 +46,7 @@ class Parser
             );
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
+            self::$redis->config("SET", 'replica-read-only', 'no');
 
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
@@ -125,6 +126,7 @@ class Parser
             // Returning URL back to the queue
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            self::$redis->config("SET", 'replica-read-only', 'no');
             Parser::$redis->rPush('url', $record);
 
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
@@ -305,6 +307,7 @@ class Parser
 
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
+            self::$redis->config("SET", 'replica-read-only', 'no');
 
             // Checking if there are any exited processes
             if (count(self::$pidList) !== 0) {
@@ -372,6 +375,7 @@ class Parser
                 //
                 self::$redis = new Redis();
                 self::$redis->connect('redis-stack');
+                self::$redis->config("SET", 'replica-read-only', 'no');
                 $record = self::$redis->lPop($listName);
 
 //                    sleep(rand(1, 3));

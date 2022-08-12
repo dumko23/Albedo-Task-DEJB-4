@@ -35,6 +35,8 @@ class CharParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
+                    Parser::$redis->config("SET", 'replica-read-only', 'no');
+
                     Parser::$redis->lPush('url', $record);
 
 
@@ -83,6 +85,8 @@ class CharParser implements ParserInterface
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
             Parser::$redis->rPush('url', $record);
         }
     }
@@ -118,6 +122,8 @@ class CharParser implements ParserInterface
                 }
                 Parser::$redis = new Redis();
                 Parser::$redis->connect('redis-stack');
+                Parser::$redis->config("SET", 'replica-read-only', 'no');
+
                 Parser::$redis->rPush('url', $_ENV['URL'] . $character . '|PaginationParser');
             }
         }

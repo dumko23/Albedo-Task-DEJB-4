@@ -38,6 +38,7 @@ class AntwortParser implements ParserInterface
                     );
                     Parser::$redis = new Redis();
                     Parser::$redis->connect('redis-stack');
+                    Parser::$redis->config("SET", 'replica-read-only', 'no');
                     Parser::$redis->lPush('answer', $record);
 
                     LoggingAdapter::logOrDebug(
@@ -87,6 +88,8 @@ class AntwortParser implements ParserInterface
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
+            Parser::$redis->config("SET", 'replica-read-only', 'no');
+
             Parser::$redis->rPush('url', $record);
         }
     }
