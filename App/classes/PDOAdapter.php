@@ -445,9 +445,9 @@ class PDOAdapter
                             )
                         ')->execute();
 
-            $char = static::db()->prepare('SELECT COUNT(1) FROM parser_data.character_table')->execute();
-            $question = static::db()->prepare('SELECT COUNT(1) FROM parser_data.questions')->execute();
-            $answer = static::db()->prepare('SELECT COUNT(1) FROM parser_data.answers')->execute();
+            $char = static::db()->prepare('SELECT COUNT(*) FROM parser_data.character_table')->execute();
+            $question = static::db()->prepare('SELECT COUNT(*) FROM parser_data.questions')->execute();
+            $answer = static::db()->prepare('SELECT COUNT(*) FROM parser_data.answers')->execute();
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
                 'info',
