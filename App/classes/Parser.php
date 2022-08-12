@@ -54,7 +54,7 @@ class Parser
                 'Success...'
             );
 
-            if (self::$redis->lLen('url') === 0) {
+            if (self::$redis->lLen('url') === 0 && self::$redis->lLen('answer') === 0) {
                 self::$redis->rPush('url', $_ENV['URL'] . '|CharParser');
             }
             if ($_ENV['FRESH_PARSE'] === 'true') {
@@ -127,7 +127,11 @@ class Parser
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             self::$redis->config("SET", 'replica-read-only', 'no');
-            Parser::$redis->rPush('url', $record);
+            if(str_contains($record, 'AntwortParser')){
+                Parser::$redis->rPush('answer', $record);
+            } else{
+                Parser::$redis->rPush('url', $record);
+            }
 
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
