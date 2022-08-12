@@ -116,37 +116,16 @@ class AntwortParser implements ParserInterface
             ['count' => $answersCount]
         );
 
-        if ($answersCount > 1) {
-            for ($i = 0; $i < $answersCount; $i++) {
 
-                LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                    'info',
-                    'Inserting "{num}" from "{count}" answers',
-                    ['count' => $answersCount, 'num' => $i]
-                );
-
-                $answer = $answers[$i]
-                    ->firstChild()
-                    ->getNode()
-                    ->textContent;
-
-                self::insertAnswer($db, $answer, $record);
-            }
+        for ($i = 0; $i < $answersCount; $i++) {
 
             LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
                 'info',
-                'All of "{count}" answers inserted',
-                ['count' => $answersCount,]
-            );
-        } else if ($answersCount === 1){
-
-            LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
-                'info',
-                'Inserting exactly "{count}" answer',
-                ['count' => $answersCount, ]
+                'Inserting "{num}" from "{count}" answers',
+                ['count' => $answersCount, 'num' => $i]
             );
 
-            $answer = $answers[0]
+            $answer = $answers[$i]
                 ->firstChild()
                 ->getNode()
                 ->textContent;
@@ -154,6 +133,11 @@ class AntwortParser implements ParserInterface
             self::insertAnswer($db, $answer, $record);
         }
 
+        LoggingAdapter::logOrDebug(LoggingAdapter::$logInfo,
+            'info',
+            'All of "{count}" answers inserted',
+            ['count' => $answersCount,]
+        );
     }
 
 
