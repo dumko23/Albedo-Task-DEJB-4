@@ -46,6 +46,7 @@ class Parser
             );
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
+            self::$redis->auth('myparserpass');
 
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
@@ -320,6 +321,8 @@ class Parser
 
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
+            self::$redis->auth('myparserpass');
+
 
             // Checking if there are any exited processes
             if (count(self::$pidList) !== 0) {
@@ -387,6 +390,8 @@ class Parser
                 //
                 self::$redis = new Redis();
                 self::$redis->connect('redis-stack');
+                self::$redis->auth('myparserpass');
+
                 $record = self::$redis->lPop($listName);
 
 //                    sleep(rand(1, 3));
