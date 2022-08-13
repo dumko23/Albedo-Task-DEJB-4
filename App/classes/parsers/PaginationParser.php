@@ -113,6 +113,7 @@ class PaginationParser implements ParserInterface
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->config("SET", 'replica-read-only', 'no');
+            Parser::$redis->config("SET", 'protected-mode', 'yes');
 
             Parser::$redis->rPush('url', $newRecord);
         }

@@ -47,6 +47,7 @@ class Parser
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
             self::$redis->config("SET", 'replica-read-only', 'no');
+            self::$redis->config("SET", 'protected-mode', 'yes');
 
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
@@ -124,9 +125,7 @@ class Parser
                 ['message' => $exception->getMessage(), 'number' => $exception->getLine(), 'class' => $exception->getErrorClass(), 'record' => $record]
             );
             // Returning URL back to the queue
-            Parser::$redis = new Redis();
-            Parser::$redis->connect('redis-stack');
-            self::$redis->config("SET", 'replica-read-only', 'no');
+
             if(str_contains($record, 'AntwortParser')){
                 Parser::$redis->rPush('answer', $record);
             } else{
@@ -314,6 +313,9 @@ class Parser
         }
     }
 
+    /**
+     * @throws RedisException
+     */
     public static function parseCycle(bool $process, string $listName): void
     {
         while ($process) {
@@ -321,6 +323,7 @@ class Parser
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
             self::$redis->config("SET", 'replica-read-only', 'no');
+            self::$redis->config("SET", 'protected-mode', 'yes');
 
             // Checking if there are any exited processes
             if (count(self::$pidList) !== 0) {
@@ -389,6 +392,7 @@ class Parser
                 self::$redis = new Redis();
                 self::$redis->connect('redis-stack');
                 self::$redis->config("SET", 'replica-read-only', 'no');
+                self::$redis->config("SET", 'protected-mode', 'yes');
                 $record = self::$redis->lPop($listName);
 
 //                    sleep(rand(1, 3));
