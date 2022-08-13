@@ -47,7 +47,6 @@ class Parser
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
             self::$redis->config("SET", 'replica-read-only', 'no');
-            self::$redis->config("SET", 'protected-mode', 'yes');
 
             LoggingAdapter::logOrDebug(
                 LoggingAdapter::$logInfo,
@@ -323,7 +322,6 @@ class Parser
             self::$redis = new Redis();
             self::$redis->connect('redis-stack');
             self::$redis->config("SET", 'replica-read-only', 'no');
-            self::$redis->config("SET", 'protected-mode', 'yes');
 
             // Checking if there are any exited processes
             if (count(self::$pidList) !== 0) {
@@ -392,7 +390,6 @@ class Parser
                 self::$redis = new Redis();
                 self::$redis->connect('redis-stack');
                 self::$redis->config("SET", 'replica-read-only', 'no');
-                self::$redis->config("SET", 'protected-mode', 'yes');
                 $record = self::$redis->lPop($listName);
 
 //                    sleep(rand(1, 3));

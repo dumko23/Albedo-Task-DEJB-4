@@ -303,7 +303,6 @@ class PDOAdapter
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->config("SET", 'replica-read-only', 'no');
-            Parser::$redis->config("SET", 'protected-mode', 'yes');
 
             Parser::$redis->rPush('url', $record);
         }
@@ -356,7 +355,6 @@ class PDOAdapter
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->config("SET", 'replica-read-only', 'no');
-            Parser::$redis->config("SET", 'protected-mode', 'yes');
 
             Parser::$redis->rPush('answers', $record);
         }
@@ -386,7 +384,6 @@ class PDOAdapter
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
             Parser::$redis->config("SET", 'replica-read-only', 'no');
-            Parser::$redis->config("SET", 'protected-mode', 'yes');
 
             Parser::$redis->del('url');
             Parser::$redis->del('answers');
