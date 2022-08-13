@@ -28,9 +28,10 @@ services:
       - "8001:8001"
     volumes:
       - ./redis/data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
     depends_on:
       - obfs4-bridge
-    command: redis-server --requirepass myparserpass
+    command: redis-server /usr/local/etc/redis/redis.conf
 
   obfs4-bridge:
     image: thetorproject/obfs4-bridge:latest
