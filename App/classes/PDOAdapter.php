@@ -302,7 +302,6 @@ class PDOAdapter
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
 
             Parser::$redis->rPush('url', $record);
         }
@@ -354,7 +353,6 @@ class PDOAdapter
             );
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
 
             Parser::$redis->rPush('answers', $record);
         }
@@ -383,7 +381,6 @@ class PDOAdapter
             static::db()->prepare('SET foreign_key_checks = 1')->execute();
             Parser::$redis = new Redis();
             Parser::$redis->connect('redis-stack');
-            Parser::$redis->config("SET", 'replica-read-only', 'no');
 
             Parser::$redis->del('url');
             Parser::$redis->del('answers');
