@@ -33,13 +33,7 @@ FRESH_PARSE=true
 ```
 
 
-In Parser class in ```initialize``` method declaration uncomment ```dropNCreate``` line to drop (if exists) and create (if not exists) appropriate project tables
-```
-//        Parser::dropNCreate(); // To initialize fresh tables
-```
-
-
-If you running project with Docker - in project root terminal write ```docker-compose build``` and ```docker-compose up -d``` to create and run project docker container in detached mode. Now your project is running parse and writing logs into ```App/classes/logs``` or in your containers terminal.
+If you running project with Docker - in project root terminal write ```docker-compose build``` and ```docker-compose up -d``` to create and run project docker container in detached mode. Now your project is running parse and writing logs into ```App/classes/logger/logs``` or in your containers terminal.
 
 
 If you running project from server - just run ```php index.php``` from App folder and expect the same result as written above. 
